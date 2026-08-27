@@ -80,14 +80,8 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/sobre" element={<Shell><SobrePage /></Shell>} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Shell><PlaygroundPage /></Shell>
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/" element={<Shell><PlaygroundPage /></Shell>} />
+          <Route path="/simulador" element={<Shell><SimuladorPage /></Shell>} />
           <Route
             path="/documentos"
             element={
@@ -101,14 +95,6 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Shell><ApuracaoPage /></Shell>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/simulador"
-            element={
-              <ProtectedRoute>
-                <Shell><SimuladorPage /></Shell>
               </ProtectedRoute>
             }
           />

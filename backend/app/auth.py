@@ -125,6 +125,26 @@ def require_role(*allowed_roles: str):
     return _dep
 
 
+DEMO_ACTOR = {
+    "id": "anonymous",
+    "email": "demo@fiscalcore.local",
+    "role": "demo",
+    "name": "Visitante (modo demo)",
+}
+
+
+async def optional_user(request: Request) -> dict:
+    """Devolve o usuário autenticado ou um DEMO_ACTOR anônimo.
+
+    Usado em endpoints da landing pública: cálculo, simulação e listagem
+    de rulesets podem ser acessados sem login para fins de demonstração.
+    """
+    try:
+        return await get_current_user(request)
+    except HTTPException:
+        return dict(DEMO_ACTOR)
+
+
 # --------------------------------------------------------------------------
 # Brute-force lockout
 # --------------------------------------------------------------------------

@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { NavLink } from "react-router-dom";
 import {
   Play, RefreshCw, Layers, FileText, ChevronRight, Hash, Fingerprint,
-  Check, Copy, Server, X,
+  Check, Copy, Server, X, Lock, ArrowRight,
 } from "lucide-react";
 import { api, formatApiError } from "../api";
 import { Metric } from "./Shared";
+import { useAuth } from "../AuthContext";
 
 // ---------- Golden request ----------
 const GOLDEN_REQUEST = {
@@ -199,6 +201,8 @@ function RulesetsPanel({ rulesets, current }) {
 }
 
 export function PlaygroundPage() {
+  const { user } = useAuth();
+  const isDemo = !user;
   const [dataOperacao, setDataOperacao] = useState(GOLDEN_REQUEST.dataOperacao);
   const [itens, setItens] = useState(GOLDEN_REQUEST.itens);
   const [rulesets, setRulesets] = useState([]);
@@ -261,6 +265,27 @@ export function PlaygroundPage() {
 
   return (
     <div className="grain">
+      {isDemo && (
+        <div className="bg-accentDim/60 border-b border-accent/20" data-testid="demo-banner">
+          <div className="max-w-[1400px] mx-auto px-6 py-2.5 flex items-center justify-between gap-4 text-[11.5px] font-mono">
+            <div className="flex items-center gap-2 text-accent/90">
+              <Lock className="w-3.5 h-3.5" />
+              <span className="uppercase tracking-[0.22em]">modo demo</span>
+              <span className="text-muted normal-case tracking-normal">
+                · playground e simulador liberados · demais páginas pedem login
+              </span>
+            </div>
+            <NavLink
+              to="/login"
+              data-testid="demo-cta-login"
+              className="text-accent hover:text-accentHover inline-flex items-center gap-1 border border-accent/40 hover:bg-accent hover:text-bg rounded-md px-2.5 py-1 transition-colors"
+            >
+              entrar como fiscal / admin
+              <ArrowRight className="w-3 h-3" />
+            </NavLink>
+          </div>
+        </div>
+      )}
       <section className="relative hero-glow max-w-[1400px] mx-auto px-6 pt-16 pb-14">
         <div className="relative z-10 max-w-4xl">
           <div className="flex items-center gap-2 mb-6"><span className="rule-accent" />

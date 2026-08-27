@@ -8,7 +8,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from .audit_ledger import append_event
-from .auth import get_current_user, require_role
+from .auth import get_current_user, optional_user, require_role
 from .db import (
     carregar_rulesets,
     get_auditoria,
@@ -49,7 +49,7 @@ async def obter_auditoria(
 async def calcular_endpoint(
     req: CalcularRequest,
     request: Request,
-    user: dict = Depends(require_role("fiscal", "admin")),
+    user: dict = Depends(optional_user),
 ) -> CalcularResponse:
     rulesets = await carregar_rulesets()
     ruleset = resolver_ruleset(rulesets, req.dataOperacao)
@@ -133,7 +133,7 @@ async def calcular_endpoint(
 @router.post("/simular")
 async def simular_endpoint(
     req: CalcularRequest,
-    user: dict = Depends(require_role("fiscal", "auditoria", "admin")),
+    user: dict = Depends(optional_user),
 ) -> Dict[str, Any]:
     """Simula regime atual (ICMS/PIS/Cofins aproximado) vs Reforma (motor real)."""
     rulesets = await carregar_rulesets()
