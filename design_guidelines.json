@@ -1,0 +1,100 @@
+{
+  "project_type": "developer_tools_api_playground",
+  "theme_strategy": "dark_mode_only",
+  "mood": "Serious, Precise, Technical, Authoritative, Deterministic",
+  "typography": {
+    "fonts": {
+      "headings": "Chivo",
+      "body": "IBM Plex Sans",
+      "mono": "JetBrains Mono"
+    },
+    "font_install_instructions": "Import these fonts via Google Fonts in index.css or use @fontsource packages.",
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl tracking-tighter font-black",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-bold",
+      "h3": "text-xl sm:text-2xl tracking-tight font-semibold",
+      "body": "text-base leading-relaxed",
+      "code": "font-mono text-sm tracking-tight",
+      "labels": "uppercase text-xs tracking-[0.2em] font-semibold text-zinc-500"
+    }
+  },
+  "colors": {
+    "archetype": "SWISS & HIGH-CONTRAST + TACTICAL MINIMALISM",
+    "palette": {
+      "background": "#09090B",
+      "surface": "#121214",
+      "surface_elevated": "#18181B",
+      "border": "#27272A",
+      "border_hover": "#3F3F46",
+      "text_primary": "#FAFAFA",
+      "text_secondary": "#A1A1AA",
+      "accent_primary": "#E2FF3D",
+      "accent_primary_hover": "#D4F02D",
+      "accent_primary_text": "#09090B",
+      "success": "#10B981",
+      "error": "#EF4444"
+    },
+    "instructions": "Use strict monochrome for 95% of the UI. The Accent Primary (#E2FF3D - Electric Lemon) is used sparingly for the primary CTA (Calcular) and key active states, providing a highly technical, subtle nod to Brazil. Never use gradients for backgrounds. Rely on solid colors and 1px borders."
+  },
+  "spacing_layout": {
+    "strategy": "High Density Grid (For Dashboards / Analytics) combined with Two-Column API Docs Split",
+    "rules": [
+      "Generous spacing between major sections (py-24), but tight dense spacing inside the technical cards (p-4 to p-6).",
+      "Use strict 1px borders (`border border-zinc-800`) to expose the grid skeleton. No rounded blobbiness. Max border-radius: `rounded-md` (6px) or `rounded-none`.",
+      "Two-Column Docs Layout: Left column for configuration/inputs (col-span-4 lg:col-span-5), Right column for the JSON Response / API Viewer (col-span-4 lg:col-span-7)."
+    ]
+  },
+  "components": {
+    "buttons": "Flat, sharp edges (`rounded-md`), high contrast. Primary button uses `bg-[#E2FF3D] text-[#09090B] font-bold hover:-translate-y-0.5 transition-transform`.",
+    "cards": "Cardless or flat solid cards with `bg-[#121214] border border-zinc-800 rounded-md`. No soft shadows. Use `shadow-[4px_4px_0px_0px_rgba(226,255,61,0.1)]` for a technical brutalist accent on hover if desired.",
+    "inputs": "Shadcn components heavily customized to look like terminal/code editor inputs. Dark backgrounds (`bg-[#09090B]`), 1px borders, monospace text for numbers.",
+    "code_viewer": "Crucial component for the right pane. Must use `JetBrains Mono`. Include syntax highlighting colors (Green for strings, Yellow for keys, Blue for numbers) on a very dark background `#050505` with a subtle inner shadow.",
+    "badges": "For Ruleset IDs and Hashes. Use `bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-xs px-2 py-1 rounded-md`."
+  },
+  "motion": {
+    "strategy": "Minimalist and snappy.",
+    "rules": [
+      "Hover states must be instantaneous or very fast (`duration-150`).",
+      "Use a subtle height expansion animation for the Memoria de Calculo accordion.",
+      "The 'Calcular' action should trigger a brief 'scanning' or 'processing' micro-animation in the JSON viewer (e.g., a fast typing effect or a flickering cursor before the data appears)."
+    ]
+  },
+  "icons_assets": {
+    "library": "lucide-react",
+    "instructions": "Use icons sparingly. Only for clear functional purposes: Copy to clipboard, Check (success), Refresh/Regenerate, External Link (Auditoria). Size them strictly to `w-4 h-4`.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1638864616275-9f0b291a2eb6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMHRlY2huaWNhbCUyMGdlb21ldHJ5JTIwZGFya3xlbnwwfHx8fDE3ODc3ODg3NTZ8MA&ixlib=rb-4.1.0&q=85",
+        "category": "background_texture",
+        "description": "Abstract technical dark geometry. Use as a VERY low opacity (5-10%) fixed background texture or masked to the right column behind the code viewer to break up pure black."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Build a Split-pane layout (like Stripe API docs). Left side: Interactive form and Ruleset Info. Right side: Code/Response viewer.",
+    "Form must be pre-filled with the 3 golden items requested: Cadeira R$1000, Medicamento R$500 c/ redução 60%, Bebida R$200 c/ Imposto Seletivo 10%.",
+    "The Response Viewer must show Base, CBS, IBS-UF, IBS-Municipio, IS, memoriaCalculo, and totals in a beautifully formatted JSON or collapsible tree structure.",
+    "Include the 'Rulesets disponíveis' (fase-teste-2026 vs regime-pleno-v1) as a toggle or select dropdown in the config panel.",
+    "Show the 'Auditoria Link' prominently after calculation with a copy button, using monospace font.",
+    "Do NOT build an actual backend, but MOCK the API response delay and data perfectly so the user can interact with the frontend exactly as if it were hitting the real POST /v1/calcular.",
+    "Ensure the UI is strictly in Portuguese (pt-BR)."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) only for sticky headers, otherwise use solid tactical surfaces.",
+    "You MUST NOT apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms.",
+    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style. For this project, use sharp or slightly rounded corners.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable for layout gaps, but keep data dense.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories = main agent will use placeholder text which is FORBIDDEN.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "All interactive and key informational elements MUST include a `data-testid` attribute to facilitate robust automated testing.",
+    "Use `sonner` for toasts, located in `/app/src/components/ui/sonner.tsx`."
+  ]
+}

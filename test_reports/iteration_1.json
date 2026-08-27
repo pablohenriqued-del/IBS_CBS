@@ -1,0 +1,24 @@
+{
+  "summary": "First iteration testing of FiscalCore Motor. Executed 17/17 in-process pytest (test_golden.py + test_api.py) + created new /app/backend/tests/test_external.py with 9 tests targeting the external REACT_APP_BACKEND_URL (validates ingress + Mongo persistence). Ran playwright against production URL to verify the playground UI. All 26 backend tests pass. Frontend playground renders correctly, RulesetsPanel lists both seeded rulesets, clicking Calcular produces totais with the exact contract numbers (baseTotal 1720.00, CBS 124.96, IBS 251.34, IS 20.00, tributos 376.30), and the auditoria-link points to /api/v1/auditoria/{id}. Golden numbers match byte-for-byte across all 3 items.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": { "ui_bugs": [], "integration_issues": [], "design_issues": [] },
+  "test_report_links": [
+    "/app/backend/tests/test_golden.py",
+    "/app/backend/tests/test_api.py",
+    "/app/backend/tests/test_external.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Auth explicitly out of MVP scope (documented TODO) — acceptable for now but must be added before any prod exposure.",
+    "resolver_ruleset silently picks most recent when overlaps occur; consider raising instead to enforce non-overlap invariant.",
+    "MOTOR_VERSAO defaults to 'dev' when env var unset — set an explicit version in .env for reproducibility."
+  ],
+  "updated_files": ["/app/backend/tests/test_external.py"],
+  "success_rate": { "backend": "100% (26/26)", "frontend": "100%" },
+  "test_credentials": "N/A (no auth in MVP by design)",
+  "seed_data_creation": "None; rulesets are seeded automatically on startup lifespan.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_external.py hits REACT_APP_BACKEND_URL and validates end-to-end ingress + Mongo. Reuse it as regression. Golden numbers are byte-exact strings; any format change (e.g. float coercion) will break tests."
+}

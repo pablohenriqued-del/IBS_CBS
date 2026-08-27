@@ -1,0 +1,1 @@
+"""FiscalCore Motor — pacote principal."""
