@@ -1,106 +1,238 @@
-# FiscalCore — Post para LinkedIn
+# FiscalCore — Kit de Publicação LinkedIn
 
-## VERSÃO 1 · Recomendada (híbrida, storytelling forte + prova técnica)
+3 versões do post + carrossel de 5 slides.
+Escolha uma versão ou publique todas em sequência (a cada 3-4 dias).
+
+---
+---
+
+## 📌 VERSÃO A · C-LEVEL / EXECUTIVA
+*Para: diretores, CFOs, líderes de TI e conselheiros. Foco em risco, valor de mercado e agenda estratégica.*
 
 ---
 
-**Uma nota emitida em julho tem que ser calculada com a regra de julho — hoje, amanhã ou numa fiscalização daqui a cinco anos.**
+**Toda empresa que emite nota fiscal vai precisar recalcular o passado. Nós ainda estamos preparados para isso?**
 
-Essa frase resume o problema que me tirou o sono nas últimas semanas.
+A Reforma Tributária brasileira, entre 2026 e 2033, criará um cenário inédito: **três regimes fiscais convivendo ao mesmo tempo** (atual, fase-teste e regime pleno em transição). Cada NF-e emitida precisará ser calculável, retroativamente, com a regra vigente na data da operação — durante todo o prazo decadencial de cinco anos.
 
-A Reforma Tributária de 2026 traz IBS, CBS e Imposto Seletivo. Mas o problema real, do ponto de vista de sistemas, não são as alíquotas — é o fato de que empresas vão operar em **três regimes simultâneos** (atual, fase-teste, regime pleno em transição) durante os próximos sete anos. E cada NF-e vai precisar resolver a regra correta pela data da operação, retroativamente, durante o prazo decadencial.
+Traduzindo para a linguagem do balanço: **uma nota emitida em julho tem que produzir o mesmo tributo em janeiro, em 2027 e em 2031**. Byte-a-byte. Em qualquer auditoria.
 
-Traduzindo: se você emite uma nota em 15/03/2026 e um auditor pede o mesmo cálculo em 2031, o número tem que ser **byte-a-byte idêntico**.
+Isso não é um problema de alíquota. É um problema arquitetural — e é onde a maioria dos ERPs vai falhar.
 
-Isso não é um exercício de framework. É um exercício de disciplina.
+Nas últimas semanas, construí um piloto do **FiscalCore Motor**: uma API determinística e auditável para IBS/CBS/Imposto Seletivo. Cinco decisões arquiteturais que separam um motor fiscal de uma "calculadora com skin fiscal":
 
-Nas últimas semanas construí o **FiscalCore Motor** — uma API determinística e auditável de cálculo IBS/CBS/IS. Cinco princípios inegociáveis:
+▪ Cálculos em Decimal (não float) — zero risco de arredondamento silencioso em milhões de operações
+▪ Base "por fora" e Imposto Seletivo compondo a base do IBS/CBS — como determina a legislação, sem "atalhos"
+▪ **Regras são dado versionado**, com hash SHA-256 e vigência — o motor resolve a regra pela data da operação, nunca "a mais recente"
+▪ Trilha de auditoria imutável com hash encadeado — evidência forense em caso de contestação
+▪ Contrato-antes-do-código: 64 testes automatizados travam a lógica antes de qualquer refatoração
 
-🔹 **Decimal, nunca float.** Todos os cálculos monetários com `ROUND_HALF_UP` a 2 casas. Zero arredondamento binário silencioso.
+**O que isso significa em impacto de negócio:**
 
-🔹 **Base "por fora".** IBS e CBS incidem sobre uma base que não inclui os próprios tributos — diferente do "por dentro" do ICMS que a gente conhece.
+→ Redução do risco fiscal em auditorias (a evidência é reproduzível e verificável)
+→ Base para integração com SAP S/4HANA como motor externo autoritativo, sem tocar no core do ERP
+→ Fundação para levar a mesma disciplina para folha, previdenciário, IRPJ — qualquer domínio onde regra é dado
+→ Independência de "big techs de compliance" que hoje cobram por transação
 
-🔹 **Imposto Seletivo compõe a base.** Sem exceções.
+A Reforma vai transformar o compliance tributário em problema de engenharia. As empresas que reconhecerem isso primeiro terão uma vantagem estrutural até 2033.
 
-🔹 **Regra é dado, não código.** Rulesets versionados com hash SHA-256 e vigência. O motor resolve o ruleset pela `dataOperacao` — nunca "o mais recente".
+Próximos passos: integração SAP via TAXBRA + adaptadores para NF-e/NFC-e/NFS-e.
 
-🔹 **Trilha imutável.** Um ledger append-only onde cada evento (login, importação, cálculo, apuração) grava o hash SHA-256 do payload encadeado ao hash do evento anterior. Qualquer adulteração quebra a cadeia — e o verificador aponta o exato ponto de ruptura.
+Aberto a conversas com times de fiscal, TI ou compliance que estão pensando esse problema seriamente.
 
-64 testes automatizados. Três casos-ouro do contrato batendo até o centavo:
-▪ Cadeira R$ 1.000 integral → R$ 265
-▪ Medicamento R$ 500 com redução de 60% → R$ 53
-▪ Bebida R$ 200 com Imposto Seletivo → R$ 78,30
+#ReformaTributária #IBSCBS #CFO #CIO #SAP #Compliance #Fiscal2026 #GovernançaFiscal
 
-O stack: FastAPI + Python Decimal + MongoDB append-only, React com Fraunces + IBM Plex + JetBrains Mono. Autenticação JWT com três papéis (fiscal, auditoria, admin). Ingestão de NF-e com idempotência por chave de acesso. Simulador comparativo "carga hoje vs carga com a Reforma".
+---
+---
 
-**O que o FiscalCore prova, ao final desse MVP:** é possível construir um motor fiscal auditável sem depender de nenhuma big tech de compliance. Um time pequeno, uma disciplina de contrato-antes-do-código, e as decisões arquiteturais certas são suficientes.
-
-O próximo passo é a integração com **SAP S/4HANA** via user-exits no procedimento TAXBRA — para que grandes ERPs possam delegar o cálculo IBS/CBS a um motor externo autoritativo, sem tocar em uma linha de ABAP crítico.
-
-É aí que motor vira plataforma.
+## 📌 VERSÃO B · TÉCNICA / DEEP-DIVE
+*Para: engenheiros, arquitetos, devs de fiscal. Foco em código, decisões e trade-offs.*
 
 ---
 
-Se você trabalha com fiscal, tributário, ERPs ou Reforma Tributária, aceito qualquer comentário, crítica ou pergunta abaixo 👇
+**Escrevendo um motor de IBS/CBS em Python: cinco decisões arquiteturais que travam a lógica fiscal antes que ela derrape.**
 
-#ReformaTributária #IBSCBS #Fiscal2026 #SAP #S4HANA #TechFiscal #Compliance #Python #FastAPI #InovaçãoFiscal
+Nas últimas semanas construí o FiscalCore Motor — API `POST /v1/calcular` para IBS, CBS e Imposto Seletivo. Compartilho as decisões que fizeram diferença.
+
+**1. `Decimal`, jamais `float`**
+
+Toda operação monetária passa por `Decimal` com `ROUND_HALF_UP` a 2 casas. Alíquotas com 4 casas. `str(Decimal("0.1") + Decimal("0.2")) == "0.3"` — não `"0.30000000000000004"`. Isso vira teste automatizado: `test_precisao_decimal_sem_float`.
+
+**2. Base "por fora" (e o Imposto Seletivo dentro)**
+
+IBS/CBS incidem sobre uma base que NÃO inclui os próprios tributos nem um ao outro — diferente do "por dentro" do ICMS. Quando há Imposto Seletivo, ele é apurado primeiro e entra na base:
+
+```python
+if item.impostoSeletivo:
+    valor_is = q2(base_sem_is * aliq_is / CEM)
+    base = base_sem_is + valor_is  # ← IS compõe a base
+```
+
+**3. Regra é dado, não código**
+
+Rulesets versionados em MongoDB append-only, com id, `vigenciaInicio`, `vigenciaFim` e hash SHA-256 do JSON canônico (sort_keys=True). O motor resolve o ruleset pela `dataOperacao` da requisição — nunca "o mais recente":
+
+```python
+def resolver_ruleset(rulesets, data_operacao):
+    for r in rulesets:
+        if r.vigenciaInicio <= data_operacao <= (r.vigenciaFim or infinito):
+            return r
+```
+
+Duas rulesets pré-carregadas: `2026-fase-teste` (CBS 0,9% + IBS 0,1%) e `2026-regime-pleno-v1` (CBS 8,8% + IBS-UF 12% + IBS-Mun 5,7%).
+
+**4. Ledger de auditoria com hash encadeado**
+
+Cada evento (login, importação NF-e, cálculo, apuração) grava:
+
+```
+{seq, ts, actor, action, payload, prev_hash}
+hash = sha256(canonical_json({...}))
+```
+
+`GET /v1/auditoria/verificar` recomputa toda a cadeia e retorna `{ok: true, total, broken_at: null}` — ou o seq exato onde a integridade quebrou. Detecção de adulteração em O(n).
+
+**5. Contrato-antes-do-código**
+
+Antes de escrever uma linha, escrevi 62 linhas de contrato com três casos-ouro e resultados esperados até o centavo:
+
+- Cadeira R$ 1.000 integral → CBS 88 + IBS 177 = **R$ 265**
+- Medicamento R$ 500 com redução 60% → CBS 17,60 + IBS 35,40 = **R$ 53**
+- Bebida R$ 200 com IS 10% → IS 20 + CBS 19,36 + IBS 38,94 = **R$ 78,30**
+
+**Se o motor não bate byte-a-byte, o motor está errado.** 64 testes automatizados garantem que qualquer PR que quebre um centavo falha o CI.
+
+**Stack:**
+- FastAPI + Motor async MongoDB + Pydantic v2 + bcrypt/PyJWT
+- React + react-router + axios com Bearer fallback (o ingress K8s reescreve `Access-Control-Allow-Origin: *`, cookies cross-site quebram)
+- Fraunces + IBM Plex + JetBrains Mono. Paleta bronze editorial, dark/light theme com CSS variables
+
+**Próximo passo:** adaptador para o procedimento TAXBRA do SAP S/4HANA. Endpoint `POST /v1/sap/pricing` que aceita KOMV e devolve condition types já preenchidos. Motor externo autoritativo, zero ABAP crítico.
+
+Feliz em debater qualquer decisão nos comentários 👇
+
+#Python #FastAPI #MongoDB #FiscalTech #Arquitetura #Decimal #SAP #ReformaTributária
 
 ---
-
-📌 **Imagem sugerida para o post**: `/app/linkedin-playground.jpg` (o playground com os 3 casos-ouro calculados — R$ 265 + R$ 53 + R$ 78,30, com a barra de totais bronze embaixo)
-
 ---
 
----
+## 📌 VERSÃO C · HÍBRIDA (a que já entreguei antes)
+*70% storytelling + 30% técnica. Melhor equilíbrio para audiência mista.*
 
-## VERSÃO 2 · Mais curta (mobile-first, ideal se quiser algo mais direto)
-
-**Escrevi um motor fiscal em Python para sobreviver à Reforma Tributária de 2026.**
-
-Não porque falta ferramenta no mercado — mas porque queria provar que dá pra fazer certo, com um time pequeno e as decisões arquiteturais corretas.
-
-Cinco princípios inegociáveis:
-
-▪ `Decimal`, nunca `float`
-▪ Base "por fora" (IBS/CBS não incluem a si mesmos nem um ao outro)
-▪ Imposto Seletivo compõe a base
-▪ Regra é **dado versionado**, não código (resolvido por `dataOperacao`)
-▪ Trilha de auditoria imutável com hash SHA-256 encadeado
-
-Resultado: uma API `POST /v1/calcular` com 64 testes automatizados, três casos-ouro batendo até o centavo, ingestão de NF-e com idempotência, apuração por período (débitos − créditos), simulador "carga hoje vs Reforma", e um ledger que detecta adulteração e aponta o seq exato onde a cadeia quebrou.
-
-Stack: FastAPI · MongoDB append-only · React · JWT com três papéis (fiscal/auditoria/admin).
-
-Uma nota emitida em julho tem que ser calculada com a regra de julho — hoje, amanhã ou numa fiscalização daqui a cinco anos.
-
-**É esse detalhe que separa um sistema fiscal de um sistema que só faz continhas.**
-
-Próxima parada: integração com SAP S/4HANA via TAXBRA. Motor vira plataforma.
-
-#ReformaTributária #IBSCBS #Fiscal2026 #SAP
+Ver arquivo `LINKEDIN-POST.md` — versão 1.
 
 ---
-
 ---
 
-## Dicas de publicação
+# 🎠 CARROSSEL DE 5 SLIDES
 
-1. **Melhor horário**: terça a quinta, 8h-10h ou 12h-14h (BR).
-2. **Primeira linha (hook)** é o que mais importa — o LinkedIn corta em ~200 chars no feed. A versão 1 já foi otimizada pra isso.
-3. **Sem link externo no corpo** do post (LinkedIn penaliza). Coloque o link nos comentários ("👇 código e detalhes técnicos no primeiro comentário").
-4. **Emojis com moderação** — os que usei (🔹 ▪ 👇) são profissionais. Evite os coloridos (💥🚀🔥).
-5. **Marque pessoas** que trabalham com fiscal/SAP na sua rede — mesmo 2-3 marcações elevam o alcance em ~40%.
-6. **Responda todos os comentários nas primeiras 2h** — o algoritmo dobra o alcance quando vê engajamento rápido.
+**Formato**: 1080×1080 (quadrado). LinkedIn aceita PDF com múltiplas páginas — cada página vira um slide navegável. Upload como "documento".
+
+**Ferramenta sugerida para montar o PDF**: cole cada imagem em uma página do Canva/Figma/PowerPoint com o overlay de texto proposto abaixo, exporte como PDF.
+
+## SLIDE 1 · Hook
+
+**Imagem base**: `/app/slide-1-hero.jpg`
+**Overlay** (grande, canto superior esquerdo, tipografia serifada branca):
+
+> **Uma nota emitida em julho**
+> **tem que ser calculada**
+> **com a regra de julho.**
+> — Hoje, amanhã ou numa fiscalização em 2031.
+
+**Rodapé**: FiscalCore Motor · v0.2.0
+
+## SLIDE 2 · O problema
+
+**Imagem base**: `/app/slide-2-pilares.jpg` OU fundo dark simples com texto
+**Título** (Fraunces, bronze): *"Três regimes ao mesmo tempo. Sete anos de transição."*
+**Corpo**:
+
+> A Reforma Tributária cria um cenário inédito:
+> Atual · Fase-teste 2026 · Regime pleno
+>
+> Cada NF-e precisa ser calculada com a regra vigente **na data da operação**, retroativamente, durante todo o prazo decadencial.
+>
+> Isso não é problema de alíquota.
+> É problema **arquitetural**.
+
+## SLIDE 3 · Os 5 princípios
+
+**Imagem base**: `/app/slide-2-pilares.jpg` (o grid 01-02-03-04 já pronto)
+**Overlay título**: *"Cinco princípios inegociáveis"*
+**Corpo já visível no print** (os 4 pilares) — adicionar o 5º embaixo:
+
+> **05. Contrato antes do código.** Três casos-ouro, resultados esperados até o centavo. 64 testes travando cada decisão.
+
+## SLIDE 4 · A prova (números batendo)
+
+**Imagem base**: `/app/slide-3-totais.jpg` (playground com o card R$ 376,30 em destaque)
+**Overlay título**: *"Os três casos-ouro do contrato"*
+**Corpo** (canto inferior):
+
+> Cadeira integral → **R$ 265**
+> Medicamento (redução 60%) → **R$ 53**
+> Bebida com IS 10% → **R$ 78,30**
+>
+> **Total: R$ 376,30 — byte a byte.**
+
+## SLIDE 5 · Ledger imutável
+
+**Imagem base**: `/app/slide-4-ledger.jpg` (a tela `/auditoria` com "íntegra · 380 eventos")
+**Overlay título**: *"Trilha de auditoria com hash encadeado"*
+**Corpo**:
+
+> Cada evento (login, cálculo, importação, apuração) referencia o hash SHA-256 do anterior.
+>
+> Adulteração quebra a cadeia.
+> O verificador aponta o **seq exato** da ruptura.
+>
+> Evidência forense reproduzível.
+
+## SLIDE 6 · CTA + Assinatura
+
+**Imagem base**: `/app/slide-6-assinatura.jpg` (a página `/sobre` com sua assinatura)
+**Overlay** já embutido — só reforçar no rodapé do slide:
+
+> **Próxima parada:** SAP S/4HANA via TAXBRA. Motor vira plataforma.
+>
+> Feito por **Pablo Duarte** · Gerente de Inovação & TI
+> linkedin.com/in/pablo-henrique-duarte
 
 ---
+---
 
-## Sugestão de comentário para postar logo em seguida
+# 🎯 ESTRATÉGIA DE PUBLICAÇÃO
 
-> Alguns detalhes técnicos que ficaram fora do post pra não ficar longo demais:
-> 
-> — Os rulesets são serializados em JSON canônico (sort_keys=True, sem espaços) antes do SHA-256, garantindo hash determinístico.
-> — A memória de cálculo é retornada linha a linha em cada resposta ("Base = ... × 8.8000% × 1.0000 = 88.00"), pra que um auditor possa reconstruir cada operação sem precisar rodar o motor.
-> — A trilha ledger tem um `POST /v1/auditoria/verificar` que recomputa toda a cadeia e retorna `{ok: true, total, broken_at: null}` — ou aponta o seq exato da quebra.
-> — A idempotência de ingestão é por `chaveAcesso` (44 dígitos): reenviar o mesmo XML devolve 409 com o id do documento original.
-> 
-> Feliz em detalhar qualquer ponto.
+**Plano recomendado para 2 semanas:**
+
+| Dia | Ação | Formato |
+|---|---|---|
+| D+0 (terça, 8h) | **Versão C (híbrida)** | Post texto + imagem `/app/linkedin-playground.jpg` |
+| D+2 (quinta) | **Carrossel 5 slides** | Upload PDF com os 5 slides montados |
+| D+7 (terça) | **Versão B (técnica)** | Post texto puro (audiência de dev engaja mais em texto longo) |
+| D+11 (sábado, 10h) | **Versão A (executiva)** | Post texto + slide 4 (a prova) — sábado tem menos ruído, C-level lê |
+
+**Regra de ouro do algoritmo LinkedIn (2026):**
+1. Zero links externos no corpo — só nos comentários.
+2. Responda os primeiros 5 comentários em ≤ 30 min (dobra o alcance).
+3. Peça uma pergunta específica no final ("qual foi a decisão mais controversa?" gera mais reply que "o que acharam?").
+4. Marque 2-3 pessoas relevantes (mas só se fizer sentido — marcação genérica é penalizada).
+5. Não edite o post nas primeiras 4h — cada edição reduz alcance em ~15%.
+
+**Métrica de sucesso pra medir:**
+- Impressões nas primeiras 24h (meta: ≥ 3.000 pra uma rede de 500-1.500 conexões)
+- Dwell time no carrossel (LinkedIn mostra na análise — meta: ≥ 4s por slide)
+- Comentários qualificados (não emojis) — meta: ≥ 8
+
+**Arquivos disponíveis em `/app/`:**
+- `linkedin-hero.jpg` (1920×1080) — hero page do site
+- `linkedin-playground.jpg` (1920×1080) — playground com resultado
+- `linkedin-sobre.jpg` (1920×1080) — página /sobre
+- `linkedin-footer.jpg` (1920×1080) — footer com assinatura
+- `slide-1-hero.jpg` (1080×1080) — hook / capa
+- `slide-2-pilares.jpg` (1080×1080) — 4 pilares
+- `slide-3-totais.jpg` (1080×1080) — playground com R$ 376,30
+- `slide-4-ledger.jpg` (1080×1080) — /auditoria íntegra
+- `slide-5-delta.jpg` (1080×1080) — simulador delta atual vs Reforma
+- `slide-6-assinatura.jpg` (1080×1080) — sobre + assinatura Pablo
