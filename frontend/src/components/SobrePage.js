@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Linkedin, ExternalLink, Sparkles, ShieldCheck, Database, GitBranch, Zap, TrendingUp, Layers } from "lucide-react";
+import { Linkedin, ExternalLink, Sparkles, ShieldCheck, Database, GitBranch, Zap, TrendingUp, Layers, Mail, Send, CheckCircle2 } from "lucide-react";
+import { api, formatApiError } from "../api";
 import { Logo } from "./Shared";
 
 const AUTHOR = {
@@ -25,6 +26,124 @@ function Section({ eyebrow, title, children }) {
     </section>
   );
 }
+
+function ContatoForm() {
+  const [form, setForm] = useState({ nome: "", email: "", empresa: "", mensagem: "" });
+  const [sent, setSent] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const upd = (k, v) => setForm({ ...form, [k]: v });
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setLoading(true); setError(null);
+    try {
+      const { data } = await api.post("/public/contato", { ...form, origem: "sobre" });
+      setSent(data);
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally { setLoading(false); }
+  };
+
+  if (sent) {
+    return (
+      <section className="max-w-3xl mx-auto py-14 reveal" data-testid="contato-ok">
+        <div className="border border-success/40 bg-success/5 rounded-md p-8 flex items-start gap-4">
+          <CheckCircle2 className="w-6 h-6 text-success shrink-0 mt-0.5" />
+          <div>
+            <div className="font-heading text-2xl text-strong mb-2">Recebido.</div>
+            <p className="text-[14.5px] text-text leading-relaxed">
+              {sent.mensagem} Anotei também no ledger auditável — o mesmo que
+              garante integridade dos cálculos. Referência interna:{" "}
+              <span className="font-mono text-[11px] text-muted">{sent.id}</span>
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="max-w-3xl mx-auto py-14 reveal" data-testid="contato-form-section">
+      <div className="text-[11px] font-mono uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2">
+        <span className="rule-accent" /> Conversar direto
+      </div>
+      <h2 className="font-heading text-3xl md:text-4xl tracking-tight text-strong mb-4 leading-tight">
+        Curto conversas <span className="serif-italic text-accent">assíncronas</span>. Sem LinkedIn DM.
+      </h2>
+      <p className="text-[14.5px] text-muted leading-relaxed mb-8">
+        Se você é CFO, CIO, líder fiscal ou arquiteto pensando essa transição
+        seriamente, escreva aqui. Respondo por e-mail em até 48h.
+      </p>
+
+      <form onSubmit={submit} className="space-y-4" data-testid="contato-form">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label>
+            <span className="text-[10px] uppercase tracking-[0.22em] text-muted">Seu nome</span>
+            <input
+              type="text" required minLength={2} maxLength={120}
+              value={form.nome} onChange={(e) => upd("nome", e.target.value)}
+              data-testid="contato-nome"
+              className="mt-1 w-full bg-bg border border-border rounded-md px-3 py-2.5 text-sm focus:border-accent focus:outline-none"
+            />
+          </label>
+          <label>
+            <span className="text-[10px] uppercase tracking-[0.22em] text-muted">E-mail</span>
+            <input
+              type="email" required
+              value={form.email} onChange={(e) => upd("email", e.target.value)}
+              data-testid="contato-email"
+              className="mt-1 w-full bg-bg border border-border rounded-md px-3 py-2.5 text-sm font-mono focus:border-accent focus:outline-none"
+            />
+          </label>
+        </div>
+        <label className="block">
+          <span className="text-[10px] uppercase tracking-[0.22em] text-muted">Empresa (opcional)</span>
+          <input
+            type="text" maxLength={120}
+            value={form.empresa} onChange={(e) => upd("empresa", e.target.value)}
+            data-testid="contato-empresa"
+            className="mt-1 w-full bg-bg border border-border rounded-md px-3 py-2.5 text-sm focus:border-accent focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="text-[10px] uppercase tracking-[0.22em] text-muted">Contexto e pergunta</span>
+          <textarea
+            required minLength={4} maxLength={1200} rows={5}
+            value={form.mensagem} onChange={(e) => upd("mensagem", e.target.value)}
+            data-testid="contato-mensagem"
+            placeholder="Ex: estamos rodando S/4HANA, migração planejada para 2027, gostaria de entender como o FiscalCore lida com o TAXBRA na fase de transição..."
+            className="mt-1 w-full bg-bg border border-border rounded-md px-3 py-2.5 text-sm leading-relaxed focus:border-accent focus:outline-none resize-y"
+          />
+        </label>
+
+        {error && (
+          <div className="border border-error/30 bg-error/5 rounded-md p-3 text-error font-mono text-[12px]" data-testid="contato-error">
+            ⨯ {error}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-2">
+          <div className="text-[10.5px] font-mono text-muted flex items-center gap-2">
+            <Mail className="w-3 h-3" />
+            registrado no ledger auditável · sem newsletter · sem spam
+          </div>
+          <button
+            type="submit" disabled={loading}
+            data-testid="contato-submit"
+            className="bg-accent text-bg font-semibold rounded-md px-5 py-2.5 flex items-center gap-2 hover:bg-accentHover transition-colors disabled:opacity-60"
+          >
+            {loading ? "Enviando…" : (<>
+              <Send className="w-3.5 h-3.5" strokeWidth={2.5} /> Enviar
+            </>)}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
 
 function Pillar({ icon: Icon, title, body }) {
   return (
@@ -154,6 +273,10 @@ export function SobrePage() {
           em uma linha de ABAP crítico. É aí que motor vira plataforma.
         </p>
       </Section>
+
+      {/* Contato inline */}
+      <div className="border-t border-border" />
+      <ContatoForm />
 
       {/* Assinatura */}
       <div className="border-t border-border" />

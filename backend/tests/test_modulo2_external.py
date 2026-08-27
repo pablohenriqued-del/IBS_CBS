@@ -138,9 +138,10 @@ REQUEST_GOLDEN = {
 }
 
 
-def test_calcular_sem_auth_401():
+def test_calcular_publico_como_demo():
+    # /calcular agora é público em modo demo — chamada sem token retorna 200
     r = requests.post(f"{BASE_URL}/api/v1/calcular", json=REQUEST_GOLDEN, timeout=20)
-    assert r.status_code == 401
+    assert r.status_code == 200, r.text
 
 
 def test_calcular_golden(admin_headers):

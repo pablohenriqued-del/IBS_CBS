@@ -10,9 +10,11 @@ def test_health_publico(client):
     assert r.json()["status"] == "ok"
 
 
-def test_calcular_sem_auth_401(client):
+def test_calcular_publico_como_demo(client):
+    # /calcular agora é público em modo demo — devolve 200 e grava com actor.role=demo
     r = client.post("/api/v1/calcular", json=REQUEST_GOLDEN)
-    assert r.status_code == 401
+    assert r.status_code == 200, r.text
+    assert "totais" in r.json()
 
 
 def test_e2e_golden_admin(admin_client):
@@ -32,10 +34,10 @@ def test_e2e_golden_fiscal(fiscal_client):
     assert r.json()["totais"]["tributosTotais"] == "376.30"
 
 
-def test_auditoria_client_nao_calcula(auditoria_client):
-    # Auditoria é read-only: não pode calcular
+def test_auditoria_pode_calcular_publico(auditoria_client):
+    # /calcular agora é público em modo demo — qualquer role pode chamar
     r = auditoria_client.post("/api/v1/calcular", json=REQUEST_GOLDEN)
-    assert r.status_code == 403
+    assert r.status_code == 200, r.text
 
 
 def test_rulesets_publico(client):

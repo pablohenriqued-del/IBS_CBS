@@ -16,6 +16,7 @@ from .db import (
 )
 from .models import CalcularRequest, CalcularResponse, ErroDetalhe, ErroResponse
 from .motor import CClassTribDesconhecido, calcular
+from .routes_public import demo_rate_check
 from .simulador import simular
 
 from .rulesets import compute_ruleset_hash, resolver_ruleset
@@ -51,6 +52,10 @@ async def calcular_endpoint(
     request: Request,
     user: dict = Depends(optional_user),
 ) -> CalcularResponse:
+    # Rate limit no modo demo (10 chamadas/hora por IP)
+    if user.get("role") == "demo":
+        demo_rate_check(request)
+
     rulesets = await carregar_rulesets()
     ruleset = resolver_ruleset(rulesets, req.dataOperacao)
     if ruleset is None:

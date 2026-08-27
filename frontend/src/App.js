@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
-import { Linkedin } from "lucide-react";
+import { Linkedin, Activity } from "lucide-react";
 import { AuthProvider } from "./AuthContext";
 import { Header } from "./components/Header";
 import { LoginPage, ProtectedRoute } from "./components/Login";
@@ -13,6 +13,32 @@ import { SobrePage } from "./components/SobrePage";
 import { UsuariosPage } from "./components/UsuariosPage";
 import { SapReconciliarPage } from "./components/SapReconciliarPage";
 import { Logo, BrandLockup, useTheme } from "./components/Shared";
+import { api } from "./api";
+
+function DemoCounter() {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    api.get("/public/stats").then((r) => { if (alive) setStats(r.data); }).catch(() => {});
+    const t = setInterval(() => {
+      api.get("/public/stats").then((r) => { if (alive) setStats(r.data); }).catch(() => {});
+    }, 60000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+  if (!stats) return null;
+  return (
+    <span data-testid="demo-counter" className="inline-flex items-center gap-1.5">
+      <Activity className="w-3 h-3 text-accent" />
+      <span className="text-strong tabular-nums">{stats.calculos_demo.toLocaleString("pt-BR")}</span>
+      <span className="text-muted">cálculos em modo demo</span>
+      {stats.calculos_totais > 0 && (
+        <span className="text-muted">
+          · <span className="text-strong tabular-nums">{stats.calculos_totais.toLocaleString("pt-BR")}</span> totais
+        </span>
+      )}
+    </span>
+  );
+}
 
 function Shell({ children }) {
   const { theme, toggle } = useTheme();
@@ -63,8 +89,9 @@ function Shell({ children }) {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-border flex flex-wrap items-center justify-between gap-2 font-mono text-[10.5px] text-muted">
+          <div className="pt-4 border-t border-border flex flex-wrap items-center justify-between gap-3 font-mono text-[10.5px] text-muted">
             <span>Decimal · base por fora · resolvido por dataOperacao · hash SHA-256 encadeado</span>
+            <DemoCounter />
             <span>v0.2.0 · Jan/2026 · MVP MongoDB</span>
           </div>
         </div>
