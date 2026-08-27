@@ -13,6 +13,8 @@ import {
   Calendar,
   Hash,
   Fingerprint,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
@@ -46,6 +48,51 @@ function Logo({ size = 36 }) {
       {/* Ponto de decisão / hash (determinismo) */}
       <circle cx="28" cy="30" r="2.2" fill="#D4A574" />
     </svg>
+  );
+}
+
+// -------------------------------------------------------------------------
+// Theme hook — persistência em localStorage + aplicação em <html data-theme>
+// -------------------------------------------------------------------------
+function useTheme() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "dark";
+    return localStorage.getItem("fc-theme") || "dark";
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("fc-theme", theme);
+  }, [theme]);
+
+  const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  return { theme, toggle };
+}
+
+function ThemeToggle({ theme, onToggle }) {
+  const isDark = theme === "dark";
+  return (
+    <button
+      onClick={onToggle}
+      data-testid="theme-toggle"
+      aria-label={`Alternar para tema ${isDark ? "claro" : "escuro"}`}
+      title={`Tema atual: ${isDark ? "escuro" : "claro"} · clique para trocar`}
+      className="relative w-11 h-6 rounded-full border border-border bg-elev hover:border-accent transition-colors flex items-center px-0.5 group"
+    >
+      <span
+        className="absolute w-[18px] h-[18px] rounded-full bg-accent flex items-center justify-center transition-transform duration-300 ease-out shadow-sm"
+        style={{
+          transform: isDark ? "translateX(0px)" : "translateX(22px)",
+          color: "var(--accent-text)",
+        }}
+      >
+        {isDark ? (
+          <Moon className="w-3 h-3" strokeWidth={2.5} />
+        ) : (
+          <Sun className="w-3 h-3" strokeWidth={2.5} />
+        )}
+      </span>
+    </button>
   );
 }
 
@@ -498,6 +545,7 @@ function Features() {
 // App
 // -------------------------------------------------------------------------
 export default function App() {
+  const { theme, toggle: toggleTheme } = useTheme();
   const [dataOperacao, setDataOperacao] = useState(GOLDEN_REQUEST.dataOperacao);
   const [itens, setItens] = useState(GOLDEN_REQUEST.itens);
   const [rulesets, setRulesets] = useState([]);
@@ -565,7 +613,7 @@ export default function App() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4 md:gap-5">
             <a
               href={`${API}/health`}
               target="_blank"
@@ -585,10 +633,11 @@ export default function App() {
               /rulesets
               <ArrowUpRight className="w-3 h-3" />
             </a>
-            <span className="hidden md:flex text-[11px] font-mono text-accent items-center gap-1.5 border border-accent/25 rounded-full px-2.5 py-1 bg-accentDim">
+            <span className="hidden lg:flex text-[11px] font-mono text-accent items-center gap-1.5 border border-accent/30 rounded-full px-2.5 py-1 bg-accentDim">
               <ShieldCheck className="w-3 h-3" />
               determinístico · auditável
             </span>
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
           </div>
         </div>
       </header>
@@ -780,9 +829,9 @@ export default function App() {
             </div>
 
             <div
-              className="border border-border rounded-md bg-[#060708] min-h-[560px] p-5 relative overflow-auto"
+              className="border border-border rounded-md bg-codeBg min-h-[560px] p-5 relative overflow-auto"
               data-testid="response-viewer"
-              style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)" }}
+              style={{ boxShadow: "inset 0 1px 0 var(--code-shadow)" }}
             >
               {!response && !error && !loading && (
                 <div>
