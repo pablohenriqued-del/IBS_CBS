@@ -1,0 +1,37 @@
+{
+  "summary": "Validated the new NF-e samples feature end-to-end: 6 static XMLs on disk, GET /api/v1/samples (list), GET /api/v1/samples/{nome} (download), and the DocumentosPage samples panel with per-card import/download buttons. Wrote /app/backend/tests/test_samples.py with 18 tests — 18/18 green — covering: auth (401 without token), list shape+count (6 amostras with required keys), individual download of all 6 files (content-type application/xml, body starts with <?xml, contains nfeProc/NFe/CAD001 for #01), path traversal blocking (../server.py and ..%2Fserver.py both return 400/404 and never leak server.py source), non-xml extension rejection (400), missing file (404), golden ingestion of sample-04 (tributosTotais==376.30, chave ends 000000404), sample-06 (cbs==9.00, ibs==1.00, rulesetId contains fase-teste), sample-03 (impostoSeletivo==20.00, item.base==220.00 proving IS enters IBS/CBS base), idempotency (2nd import of #04 returns 409 with erro==documento_ja_importado), and regression /api/v1/calcular golden unchanged (1720.00/124.96/251.34/376.30). Frontend Playwright on the preview URL: after admin login, /documentos renders samples-panel with exactly 6 sample-{arquivo} cards, each with sample-import-{arquivo} and sample-download-{arquivo} testids; badges render correctly (saída bronze/accent, entrada green/success, ruleset muted); clicking import calls POST /v1/documentos/importar and populates upload-msg with error-styled 409 (documents were already ingested by previous backend test runs — idempotency is exactly the intended proof). All expected data-testids present. No regressions.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "DocumentosPage upload-msg", "issues": ["When the backend returns 409 documento_ja_importado, the frontend displays the RAW JSON body ({\"erro\":\"documento_ja_importado\",\"chaveAcesso\":\"...\",\"id\":\"...\"}) instead of a human-readable Portuguese message. formatApiError() is not unwrapping the structured detail dict — it works for string details but leaks JSON for object details. Same story likely happens on sem_ruleset_vigente (422 with detail dict). Recommend: in api.js formatApiError, when detail is an object with 'erro' key, translate known codes ('documento_ja_importado' → 'NF-e já foi importada anteriormente (chave …last8)', 'sem_ruleset_vigente' → 'Sem ruleset vigente para a data …')."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_samples.py",
+    "/app/test_reports/pytest/pytest_samples.xml"
+  ],
+  "action_items": [
+    "MINOR UX: formatApiError() in frontend/src/api.js doesn't unwrap structured detail objects; user sees raw JSON on 409/422. Translate the 'erro' code to a friendly PT-BR message and expose chaveAcesso.slice(-8) inline."
+  ],
+  "critical_code_review_comments": [
+    "routes_docs.py path traversal check uses only substring match ('/' in nome or '..' in nome). Works today, but a name like 'foo..bar.xml' would be rejected too (false positive) — consider Path(nome).name == nome AND '..' not in Path(nome).parts, or use os.path.commonpath.",
+    "GET /api/v1/samples/{nome} reads the file synchronously via .read_bytes() inside an async def. Files are 1–3KB so it's fine, but if samples grow use aiofiles or FileResponse.",
+    "_SAMPLES_META is a module-level list mutable by reference — a caller could theoretically mutate the returned dict. Consider returning a deep copy or freezing it. Not urgent.",
+    "importarAmostra() in DocumentosPage.js does not clear stale error messages before firing — if the previous action failed, the old message flashes until the new fetch resolves. Consider setMessage(null) at the start."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_samples.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 new tests; 46/46 pre-existing untouched)",
+    "frontend": "100% (samples-panel, 6 cards, import+download testids, badges, 409 error styling all verified)"
+  },
+  "test_credentials": "admin@fiscalcore.local / FiscalCore@2026 (as documented in /app/memory/test_credentials.md)",
+  "seed_data_creation": "Sample XMLs have FIXED chaveAcesso (ends 000000101…000000606). First test run per Mongo instance imports them; subsequent runs return 409 by design (idempotency). Tests are written to accept both 200 (fresh) and 409 (already imported) status codes for the ingestion path — the 409 branch itself asserts detail.erro == 'documento_ja_importado', so both outcomes prove correctness.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_samples.py is idempotency-safe (accepts 200 or 409 on ingestion tests). To force fresh 200 behavior, drop the documentos collection: mongo shell → db.documentos.deleteMany({chaveAcesso: /0000004040000004$/}). Sample chaves end in 000000{101,202,303,404,505,606}. The frontend upload-msg surfaces raw JSON on 409 — that's a UX gap, not a functional bug. All 6 XMLs are on disk at /app/backend/samples/. Endpoint prefix is /api/v1/samples (mounted from routes_docs.py). Auth: Bearer JWT from /api/auth/login, not cookies.",
+  "rca of the issue": "No functional bugs found. The single minor UX finding (raw JSON error message on 409) is caused by formatApiError() in frontend/src/api.js — when Axios error.response.data.detail is an object (structured error), the helper coerces the object to a JSON string instead of picking a friendly message. Fix: check typeof detail === 'object' and map known 'erro' codes."
+}

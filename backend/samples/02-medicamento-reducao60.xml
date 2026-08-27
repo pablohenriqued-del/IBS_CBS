@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00">
+ <NFe>
+  <infNFe versao="4.00" Id="NFe35260812345678000190550010000000202000000202">
+   <ide>
+    <cUF>35</cUF>
+    <natOp>Venda de medicamento (lista com reducao)</natOp>
+    <mod>55</mod>
+    <serie>1</serie>
+    <nNF>202</nNF>
+    <dhEmi>2026-08-26T11:00:00-03:00</dhEmi>
+    <tpNF>1</tpNF>
+   </ide>
+   <emit>
+    <CNPJ>12345678000190</CNPJ>
+    <xNome>Sony Music Brasil LTDA</xNome>
+    <enderEmit><UF>SP</UF></enderEmit>
+   </emit>
+   <dest>
+    <CNPJ>98765432000100</CNPJ>
+    <xNome>Farmacia Popular LTDA</xNome>
+    <enderDest><UF>MG</UF></enderDest>
+   </dest>
+   <det nItem="1">
+    <prod>
+     <cProd>MED2001</cProd>
+     <xProd>Medicamento generico (lista com reducao de 60%)</xProd>
+     <NCM>30049099</NCM>
+     <CFOP>6102</CFOP>
+     <uCom>CX</uCom>
+     <qCom>1.00</qCom>
+     <vUnCom>500.00</vUnCom>
+     <vProd>500.00</vProd>
+    </prod>
+    <imposto>
+     <IBSCBS>
+      <cClassTrib>200052</cClassTrib>
+      <vBC>500.00</vBC>
+      <CBS><pCBS>3.5200</pCBS><vCBS>17.60</vCBS></CBS>
+      <IBS><CST>200</CST><pIBSUF>4.8000</pIBSUF><vIBSUF>24.00</vIBSUF><pIBSMun>2.2800</pIBSMun><vIBSMun>11.40</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <total><ICMSTot><vNF>500.00</vNF></ICMSTot></total>
+  </infNFe>
+ </NFe>
+</nfeProc>

@@ -1,19 +1,21 @@
-"""Rotas HTTP do FiscalCore Motor."""
+"""Rotas HTTP do FiscalCore Motor — cálculo IBS/CBS."""
 from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
+from .audit_ledger import append_event
+from .auth import get_current_user, require_role
 from .db import (
     carregar_rulesets,
     get_auditoria,
     gravar_auditoria,
 )
 from .models import CalcularRequest, CalcularResponse, ErroDetalhe, ErroResponse
-from .motor import CClassTribDesconhecido, SemRulesetVigente, calcular
+from .motor import CClassTribDesconhecido, calcular
 from .rulesets import compute_ruleset_hash, resolver_ruleset
 
 router = APIRouter(prefix="/api/v1")
@@ -30,8 +32,11 @@ async def listar_rulesets() -> Dict[str, Any]:
     return {"rulesets": rulesets, "total": len(rulesets)}
 
 
-@router.get("/auditoria/{auditoria_id}")
-async def obter_auditoria(auditoria_id: str) -> Dict[str, Any]:
+@router.get("/auditoria/calculos/{auditoria_id}")
+async def obter_auditoria(
+    auditoria_id: str,
+    _user: dict = Depends(require_role("auditoria", "admin", "fiscal")),
+) -> Dict[str, Any]:
     doc = await get_auditoria(auditoria_id)
     if not doc:
         raise HTTPException(status_code=404, detail={"erro": "auditoria_nao_encontrada"})
@@ -39,8 +44,11 @@ async def obter_auditoria(auditoria_id: str) -> Dict[str, Any]:
 
 
 @router.post("/calcular", response_model=CalcularResponse, responses={422: {"model": ErroResponse}})
-async def calcular_endpoint(req: CalcularRequest, request: Request) -> CalcularResponse:
-    # 1. Resolver ruleset pela dataOperacao (nunca "o mais recente")
+async def calcular_endpoint(
+    req: CalcularRequest,
+    request: Request,
+    user: dict = Depends(require_role("fiscal", "admin")),
+) -> CalcularResponse:
     rulesets = await carregar_rulesets()
     ruleset = resolver_ruleset(rulesets, req.dataOperacao)
     if ruleset is None:
@@ -60,7 +68,6 @@ async def calcular_endpoint(req: CalcularRequest, request: Request) -> CalcularR
 
     ruleset_hash = compute_ruleset_hash(ruleset)
 
-    # 2. Calcular
     try:
         itens_out, totais, avisos = calcular(req, ruleset)
     except CClassTribDesconhecido as e:
@@ -78,7 +85,6 @@ async def calcular_endpoint(req: CalcularRequest, request: Request) -> CalcularR
             ).model_dump(),
         )
 
-    # 3. Montar resposta
     motor_versao = os.environ.get("MOTOR_VERSAO", "dev")
     calculado_em = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -95,7 +101,6 @@ async def calcular_endpoint(req: CalcularRequest, request: Request) -> CalcularR
         "avisos": avisos,
     }
 
-    # 4. Auditoria append-only: snapshot completo, reproduzível
     registro_auditoria = {
         "criadoEm": calculado_em,
         "input": req.model_dump(mode="json"),
@@ -104,7 +109,19 @@ async def calcular_endpoint(req: CalcularRequest, request: Request) -> CalcularR
         "motorVersao": motor_versao,
         "idempotencyKey": request.headers.get("Idempotency-Key"),
         "output": resp_sem_auditoria,
+        "actor": {"id": user["id"], "email": user["email"], "role": user["role"]},
     }
     auditoria_id = await gravar_auditoria(registro_auditoria)
+
+    await append_event(
+        action="calcular",
+        payload={
+            "referencia": req.referencia,
+            "rulesetId": ruleset["id"],
+            "tributosTotais": totais.tributosTotais,
+            "auditoriaId": auditoria_id,
+        },
+        actor={"id": user["id"], "email": user["email"], "role": user["role"]},
+    )
 
     return CalcularResponse(**resp_sem_auditoria, auditoriaId=auditoria_id)

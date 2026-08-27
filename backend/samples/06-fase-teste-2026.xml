@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00">
+ <NFe>
+  <infNFe versao="4.00" Id="NFe35260312345678000190550010000000606000000606">
+   <ide>
+    <cUF>35</cUF>
+    <natOp>Venda em fase-teste 2026 (CBS 0,9% + IBS 0,1%)</natOp>
+    <mod>55</mod>
+    <serie>1</serie>
+    <nNF>606</nNF>
+    <dhEmi>2026-03-15T10:00:00-03:00</dhEmi>
+    <tpNF>1</tpNF>
+   </ide>
+   <emit>
+    <CNPJ>12345678000190</CNPJ>
+    <xNome>Sony Music Brasil LTDA</xNome>
+    <enderEmit><UF>SP</UF></enderEmit>
+   </emit>
+   <dest>
+    <CNPJ>98765432000100</CNPJ>
+    <xNome>Cliente Regime Pleno LTDA</xNome>
+    <enderDest><UF>SP</UF></enderDest>
+   </dest>
+   <det nItem="1">
+    <prod>
+     <cProd>KIT606</cProd>
+     <xProd>Kit exemplo fase-teste (R$ 1.000)</xProd>
+     <NCM>94013000</NCM>
+     <CFOP>5102</CFOP>
+     <uCom>UN</uCom>
+     <qCom>1.00</qCom>
+     <vUnCom>1000.00</vUnCom>
+     <vProd>1000.00</vProd>
+    </prod>
+    <imposto>
+     <IBSCBS>
+      <cClassTrib>000001</cClassTrib>
+      <vBC>1000.00</vBC>
+      <CBS><pCBS>0.9000</pCBS><vCBS>9.00</vCBS></CBS>
+      <IBS><CST>000</CST><pIBSUF>0.1000</pIBSUF><vIBSUF>1.00</vIBSUF><pIBSMun>0.0000</pIBSMun><vIBSMun>0.00</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <total><ICMSTot><vNF>1000.00</vNF></ICMSTot></total>
+  </infNFe>
+ </NFe>
+</nfeProc>

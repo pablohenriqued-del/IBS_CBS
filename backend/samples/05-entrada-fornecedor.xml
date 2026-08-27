@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00">
+ <NFe>
+  <infNFe versao="4.00" Id="NFe35260833444455000122550010000000505000000505">
+   <ide>
+    <cUF>35</cUF>
+    <natOp>Compra de material de escritorio (entrada gera credito)</natOp>
+    <mod>55</mod>
+    <serie>1</serie>
+    <nNF>505</nNF>
+    <dhEmi>2026-08-20T15:00:00-03:00</dhEmi>
+    <tpNF>1</tpNF>
+   </ide>
+   <emit>
+    <CNPJ>33444455000122</CNPJ>
+    <xNome>Fornecedor de Escritorio LTDA</xNome>
+    <enderEmit><UF>PR</UF></enderEmit>
+   </emit>
+   <dest>
+    <CNPJ>12345678000190</CNPJ>
+    <xNome>Sony Music Brasil LTDA</xNome>
+    <enderDest><UF>SP</UF></enderDest>
+   </dest>
+   <det nItem="1">
+    <prod>
+     <cProd>PAP500</cProd>
+     <xProd>Resma de papel A4 (500 folhas)</xProd>
+     <NCM>48025500</NCM>
+     <CFOP>6102</CFOP>
+     <uCom>CX</uCom>
+     <qCom>20.00</qCom>
+     <vUnCom>25.00</vUnCom>
+     <vProd>500.00</vProd>
+    </prod>
+    <imposto>
+     <IBSCBS>
+      <cClassTrib>000001</cClassTrib>
+      <vBC>500.00</vBC>
+      <CBS><pCBS>8.8000</pCBS><vCBS>44.00</vCBS></CBS>
+      <IBS><CST>000</CST><pIBSUF>12.0000</pIBSUF><vIBSUF>60.00</vIBSUF><pIBSMun>5.7000</pIBSMun><vIBSMun>28.50</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <det nItem="2">
+    <prod>
+     <cProd>CAN010</cProd>
+     <xProd>Caneta esferografica (kit 10 un)</xProd>
+     <NCM>96081000</NCM>
+     <CFOP>6102</CFOP>
+     <uCom>KIT</uCom>
+     <qCom>5.00</qCom>
+     <vUnCom>100.00</vUnCom>
+     <vProd>500.00</vProd>
+    </prod>
+    <imposto>
+     <IBSCBS>
+      <cClassTrib>000001</cClassTrib>
+      <vBC>500.00</vBC>
+      <CBS><pCBS>8.8000</pCBS><vCBS>44.00</vCBS></CBS>
+      <IBS><CST>000</CST><pIBSUF>12.0000</pIBSUF><vIBSUF>60.00</vIBSUF><pIBSMun>5.7000</pIBSMun><vIBSMun>28.50</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <total><ICMSTot><vNF>1000.00</vNF></ICMSTot></total>
+  </infNFe>
+ </NFe>
+</nfeProc>

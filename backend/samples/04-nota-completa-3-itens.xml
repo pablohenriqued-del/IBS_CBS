@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00">
+ <NFe>
+  <infNFe versao="4.00" Id="NFe35260812345678000190550010000000404000000404">
+   <ide>
+    <cUF>35</cUF>
+    <natOp>Venda variada (3 itens, contrato caso-ouro)</natOp>
+    <mod>55</mod>
+    <serie>1</serie>
+    <nNF>404</nNF>
+    <dhEmi>2026-08-26T09:00:00-03:00</dhEmi>
+    <tpNF>1</tpNF>
+   </ide>
+   <emit>
+    <CNPJ>12345678000190</CNPJ>
+    <xNome>Sony Music Brasil LTDA</xNome>
+    <enderEmit><UF>SP</UF></enderEmit>
+   </emit>
+   <dest>
+    <CNPJ>98765432000100</CNPJ>
+    <xNome>Cliente Regime Pleno LTDA</xNome>
+    <enderDest><UF>RJ</UF></enderDest>
+   </dest>
+   <det nItem="1">
+    <prod>
+     <cProd>CAD001</cProd><xProd>Cadeira de escritorio</xProd>
+     <NCM>94013000</NCM><CFOP>6102</CFOP><uCom>UN</uCom>
+     <qCom>1.00</qCom><vUnCom>1000.00</vUnCom><vProd>1000.00</vProd>
+    </prod>
+    <imposto>
+     <IBSCBS>
+      <cClassTrib>000001</cClassTrib><vBC>1000.00</vBC>
+      <CBS><pCBS>8.8000</pCBS><vCBS>88.00</vCBS></CBS>
+      <IBS><CST>000</CST><pIBSUF>12.0000</pIBSUF><vIBSUF>120.00</vIBSUF><pIBSMun>5.7000</pIBSMun><vIBSMun>57.00</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <det nItem="2">
+    <prod>
+     <cProd>MED001</cProd><xProd>Medicamento generico</xProd>
+     <NCM>30049099</NCM><CFOP>6102</CFOP><uCom>CX</uCom>
+     <qCom>1.00</qCom><vUnCom>500.00</vUnCom><vProd>500.00</vProd>
+    </prod>
+    <imposto>
+     <IBSCBS>
+      <cClassTrib>200052</cClassTrib><vBC>500.00</vBC>
+      <CBS><pCBS>3.5200</pCBS><vCBS>17.60</vCBS></CBS>
+      <IBS><CST>200</CST><pIBSUF>4.8000</pIBSUF><vIBSUF>24.00</vIBSUF><pIBSMun>2.2800</pIBSMun><vIBSMun>11.40</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <det nItem="3">
+    <prod>
+     <cProd>BEB001</cProd><xProd>Bebida acucarada 2L</xProd>
+     <NCM>22021000</NCM><CFOP>6102</CFOP><uCom>UN</uCom>
+     <qCom>1.00</qCom><vUnCom>200.00</vUnCom><vProd>200.00</vProd>
+    </prod>
+    <imposto>
+     <IS><CST>01</CST><vBCIS>200.00</vBCIS><pIS>10.0000</pIS><vIS>20.00</vIS></IS>
+     <IBSCBS>
+      <cClassTrib>000001</cClassTrib><vBC>220.00</vBC>
+      <CBS><pCBS>8.8000</pCBS><vCBS>19.36</vCBS></CBS>
+      <IBS><CST>000</CST><pIBSUF>12.0000</pIBSUF><vIBSUF>26.40</vIBSUF><pIBSMun>5.7000</pIBSMun><vIBSMun>12.54</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <total><ICMSTot><vNF>1700.00</vNF></ICMSTot></total>
+  </infNFe>
+ </NFe>
+</nfeProc>

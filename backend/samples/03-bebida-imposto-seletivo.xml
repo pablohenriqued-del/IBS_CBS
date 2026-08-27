@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc versao="4.00">
+ <NFe>
+  <infNFe versao="4.00" Id="NFe35260812345678000190550010000000303000000303">
+   <ide>
+    <cUF>35</cUF>
+    <natOp>Venda de bebida acucarada (sujeita ao IS)</natOp>
+    <mod>55</mod>
+    <serie>1</serie>
+    <nNF>303</nNF>
+    <dhEmi>2026-08-26T14:30:00-03:00</dhEmi>
+    <tpNF>1</tpNF>
+   </ide>
+   <emit>
+    <CNPJ>12345678000190</CNPJ>
+    <xNome>Sony Music Brasil LTDA</xNome>
+    <enderEmit><UF>SP</UF></enderEmit>
+   </emit>
+   <dest>
+    <CNPJ>11122233000144</CNPJ>
+    <xNome>Distribuidora Norte LTDA</xNome>
+    <enderDest><UF>BA</UF></enderDest>
+   </dest>
+   <det nItem="1">
+    <prod>
+     <cProd>BEB0303</cProd>
+     <xProd>Bebida acucarada 2L (sujeita ao Imposto Seletivo)</xProd>
+     <NCM>22021000</NCM>
+     <CFOP>6102</CFOP>
+     <uCom>UN</uCom>
+     <qCom>1.00</qCom>
+     <vUnCom>200.00</vUnCom>
+     <vProd>200.00</vProd>
+    </prod>
+    <imposto>
+     <IS>
+      <CST>01</CST>
+      <vBCIS>200.00</vBCIS>
+      <pIS>10.0000</pIS>
+      <vIS>20.00</vIS>
+     </IS>
+     <IBSCBS>
+      <cClassTrib>000001</cClassTrib>
+      <vBC>220.00</vBC>
+      <CBS><pCBS>8.8000</pCBS><vCBS>19.36</vCBS></CBS>
+      <IBS><CST>000</CST><pIBSUF>12.0000</pIBSUF><vIBSUF>26.40</vIBSUF><pIBSMun>5.7000</pIBSMun><vIBSMun>12.54</vIBSMun></IBS>
+     </IBSCBS>
+    </imposto>
+   </det>
+   <total><ICMSTot><vNF>200.00</vNF></ICMSTot></total>
+  </infNFe>
+ </NFe>
+</nfeProc>

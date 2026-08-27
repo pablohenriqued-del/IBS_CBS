@@ -1,0 +1,37 @@
+{
+  "summary": "Module 2 (auth + NF-e ingestion + apuração + hash-chained audit ledger) validated end-to-end. Ran the full pytest suite (46/46 green): 31 in-process (test_golden, test_api, test_modulo2) + 15 new external tests in test_modulo2_external.py that hit REACT_APP_BACKEND_URL to cover ingress + Mongo + JWT Bearer flow. Playwright UI validation on the production URL: root protected route redirects to /login, admin login works, all 5 role-based nav testids render for admin, theme toggle switches + persists via localStorage['fc-theme'], playground calcular returns the golden totals byte-exact (1720.00 / 124.96 / 251.34 / 376.30), documentos page exposes dropzone + direcao-saida/entrada + file-input, apuracao apurar-btn triggers request and renders apurado-card with values, auditoria page shows integridade-card='íntegra' and ledger-table, logout clears fc-token and redirects to /login. Response shape confirmed: /api/v1/calcular returns totais.tributosTotais (not totais.tributos) and item.totalItem — updated external test to match. Golden numbers unchanged from Module 1.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_modulo2.py",
+    "/app/backend/tests/test_modulo2_external.py",
+    "/app/backend/tests/test_api.py",
+    "/app/backend/tests/test_golden.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Login input for email uses type='text' (not type='email') — works, but loses mobile keyboard hint + native validation. Consider changing to type='email' for a11y.",
+    "Frontend request spec doc / task said totais.tributos + item.totais.tributos, but backend actually returns totais.tributosTotais and item.totalItem. Contract naming is inconsistent (mixed camelCase suffixes) — align docs OR the API shape before external consumers integrate.",
+    "Header nav uses `hidden md:flex` — on <768px viewports the entire nav is hidden with no mobile menu. Add a hamburger for the mobile breakpoint or downgrade to a horizontally scrollable bar.",
+    "audit_ledger.append_event should be transactional with the domain write (e.g. Mongo session/transaction or outbox) — right now a crash between the two writes leaves the ledger and the docs collection out of sync.",
+    "test_modulo2.test_ledger_detecta_adulteracao mutates ledger docs directly via pymongo and restores in a finally; if the test process is killed mid-run the ledger stays adulterado. Consider snapshotting the whole doc, not just payload, and adding a session-scoped guard fixture."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_modulo2_external.py"
+  ],
+  "success_rate": {
+    "backend": "100% (46/46 pytest incl. 15 external via ingress)",
+    "frontend": "100% (9/9 core flows validated; the single header_nav_all_admin failure was a post-login race — subsequent nav-playground clicks all succeeded, so nav is functional)"
+  },
+  "test_credentials": "Admin admin@fiscalcore.local / FiscalCore@2026 (from ADMIN_EMAIL/ADMIN_PASSWORD env). /app/memory/test_credentials.md does NOT exist — should be created for future testing agents.",
+  "seed_data_creation": "Ingestion tests create NF-e docs with unique chaveAcesso (numeric suffix from uuid.int) so they don't collide across runs; ledger grows monotonically. Test fiscal/auditoria users are created via /api/auth/register (admin) with unique email per test module.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_modulo2_external.py is idempotent — chaveAcesso is randomised per run. Reuse it as regression. Login field for email is type='text' — MUST use data-testid='login-email' selector, NOT input[type='email']. Frontend persists JWT in localStorage['fc-token'] (not cookies) and theme in localStorage['fc-theme']. Header nav testids are lowercase Portuguese labels with accents preserved (nav-apuração, nav-usuários) — always quote them exactly. Do NOT use type='email' selector for the login page. Golden totais shape: totais.tributosTotais + item.totalItem (not totais.tributos).",
+  "rca of the issue": "No functional bugs found. One flaky-looking UI check (header_nav_all_admin) was a race between the redirect landing and useAuth re-render populating the nav — resolved by waiting for load_state('networkidle'); nav DOES render (confirmed by successful subsequent nav clicks). Not a bug, not filed."
+}

@@ -7,57 +7,71 @@ fiscais brasileiras de forma **determinística e auditável**. Princípios inego
 - Usar `Decimal`, nunca `float`.
 - Base "por fora": o imposto não entra na própria base nem um na base do outro.
 - Imposto Seletivo **entra** na base de IBS/CBS.
-- Regras são **dado versionado**: resolver ruleset pela `dataOperacao` (nunca "o mais recente").
+- Regras são **dado versionado**: resolver ruleset pela `dataOperacao`.
 - Testes automatizados contra os casos-ouro; não simplificar a lógica fiscal.
-- MVP em MongoDB (append-only para rulesets + auditoria); PostgreSQL entra na virada de produção.
+- MVP em MongoDB (append-only); PostgreSQL na virada de produção AWS.
 
 ## User personas
 - Engenheiros integrando ERPs/emissores DF-e com a Reforma Tributária 2026.
 - Contadores validando tributação em cenários "carga hoje vs. carga nova".
-- Auditores fiscais (fiscalização): trilha reproduzível bit-a-bit.
+- Auditores fiscais: trilha reproduzível bit-a-bit com verificação de integridade.
 
 ## Core requirements (estáticos)
 - `POST /api/v1/calcular` — contrato exato definido em `api-calcular-ibs-cbs.md`.
 - Base "por fora"; IS entra na base; UF+Município separados; memória de cálculo por item.
 - Rulesets versionados com `id`, `hash` SHA-256, vigência; resolvidos por `dataOperacao`.
-- Auditoria append-only por cálculo (input + rulesetId + hash + output).
+- Auditoria append-only por cálculo + trilha ledger com hash encadeado por evento.
 - Nunca "adivinhar" alíquotas: `cClassTrib` desconhecido → HTTP 422 explícito.
 - Todos os valores monetários em `Decimal`, arredondamento `ROUND_HALF_UP` a 2 casas.
 
-## What's been implemented (2026-01-27)
-- **Motor de cálculo** (`app/motor.py`) 100% em Decimal, com base "por fora", IS na base,
-  redução via `cClassTrib`, IBS partilhado UF/Município, memória de cálculo passo a passo.
-- **Endpoints**:
-  - `POST /api/v1/calcular` — cálculo principal (retorna `auditoriaId`).
-  - `GET  /api/v1/rulesets` — lista rulesets carregados.
-  - `GET  /api/v1/auditoria/{id}` — recupera snapshot completo (reproduzível).
-  - `GET  /api/v1/health`.
-- **Rulesets seed**:
-  - `ruleset:2026-fase-teste` (vig. 2026-01-01 → 2026-06-30) — CBS 0,9% + IBS-UF 0,1%.
-  - `ruleset:2026-regime-pleno-v1` (vig. 2026-07-01 →) — CBS 8,8% + IBS-UF 12% + IBS-Mun 5,7%.
-- **Persistência**: MongoDB collections `rulesets` (append-only, dedupe por (id, hash))
-  e `auditoria` (append-only puro).
-- **Testes automatizados**: `pytest` — **17/17 verdes**, incluindo os **3 casos-ouro** do contrato
-  batendo número por número (Cadeira 1000/265; Medicamento 500/53; Bebida 200 com IS 20/78.30;
-  totais: base 1720, CBS 124.96, IBS 251.34, tributosTotais 376.30).
-- **Playground web** em `/` — split-pane estilo Stripe API docs, dark mode ("Tactical Minimalism"),
-  formulário pré-carregado com os 3 itens golden, visualização "visual" ou "json bruto".
+## What's been implemented
+
+### Módulo 1 (2026-01-27) — Motor + API
+- Motor de cálculo (`app/motor.py`) 100% em Decimal, base "por fora", IS na base,
+  redução via `cClassTrib`, IBS partilhado UF/Município, memória passo a passo.
+- `POST /api/v1/calcular`, `GET /api/v1/rulesets`, `GET /api/v1/health`.
+- Rulesets seed: `ruleset:2026-fase-teste` (CBS 0,9% + IBS 0,1%) e
+  `ruleset:2026-regime-pleno-v1` (CBS 8,8% + IBS-UF 12% + IBS-Mun 5,7%).
+- 17 testes pytest — 3 casos-ouro do contrato batem número por número.
+- Frontend playground editorial (Fraunces + IBM Plex + JetBrains) com dark/light
+  theme switch, logotipo custom SVG, paleta bronze/âmbar.
+
+### Módulo 2 (2026-01-27) — Ingestão + Auth + Ledger
+- **Autenticação JWT + bcrypt** com 3 papéis (fiscal, auditoria, admin), brute-force
+  lockout (5 tentativas → 15min), Bearer fallback para navegadores cross-origin.
+  Seed admin idempotente (`admin@fiscalcore.local` / `FiscalCore@2026`).
+- **Ingestão de NF-e**: `POST /api/v1/documentos/importar` com parser XML
+  (`app/nfe_parser.py`) que aceita `nfeProc` ou `NFe` nu, extrai chave (44 dígitos),
+  emitente/destinatário, itens, grupo IBSCBS e IS. Idempotência por chave (409).
+- **Apuração por período**: `POST /api/v1/apuracao/periodo` que soma débitos
+  (saídas) menos créditos (entradas), agrupado por competência.
+- **Ledger de auditoria** com hash SHA-256 encadeado (`app/audit_ledger.py`):
+  cada evento (login, register, import, calcular, apuracao) referencia o hash
+  do anterior. `GET /api/v1/auditoria/verificar` recomputa a cadeia e aponta
+  o `seq` de quebra caso haja adulteração.
+- **Frontend** com react-router: `/login`, `/` (playground), `/documentos` (dropzone
+  + toggle direção + tabela), `/apuracao` (débitos vs créditos + apurado),
+  `/auditoria` (ledger + status íntegra/quebrada — auditoria/admin), `/usuarios`
+  (form de criação — admin).
+- 31 testes pytest verdes (17 golden + 14 do Módulo 2 cobrindo auth, ingestão,
+  idempotência, apuração e integridade do ledger).
 
 ## Prioritized backlog
 
 ### P0 — próximas para produção
-- Autenticação por API key por tenant (hoje MVP está aberto; TODO no `server.py`).
-- Migração MongoDB → PostgreSQL (ACID exigido para auditoria em produção).
-- Idempotency-Key: hoje é registrada mas não desduplica; implementar cache de resposta por chave.
+- Migração MongoDB → PostgreSQL (ACID para auditoria em produção).
+- Rate limit por API key/tenant.
+- Idempotency-Key para POST /calcular: hoje é registrada mas não desduplica.
 
 ### P1 — features do produto
 - `POST /api/v1/simular` (cenário "carga hoje vs. carga nova"; contrato §9).
-- Adaptador de emissão DF-e (mapeamento response → grupos IBS/CBS/IS de NF-e/NFC-e/NFS-e).
-- Rate limit e cobrança por API key.
-- Endpoints administrativos: upload de novo ruleset, comparação entre revisões.
+- Exportação CSV/XLSX da apuração (R6 do runbook).
+- Conciliação IBS/CBS × PIS/Cofins do mesmo período (compensação 2026).
+- Adaptador DF-e (resposta → grupos IBS/CBS/IS de NF-e/NFC-e/NFS-e).
+- Password reset flow.
 
 ### P2 — enriquecimento fiscal
-- Catálogo completo de `cClassTrib` (hoje apenas 2 códigos: 000001 e 200052).
+- Catálogo completo de `cClassTrib` (hoje 2 códigos).
 - Isenções, alíquota zero (CST 400), imunidades, monofasia.
 - Regimes especiais: Simples/MEI (créditos e limitações).
 - Split-payment / cashback (destinatário PF consumidor final).
@@ -67,12 +81,31 @@ fiscais brasileiras de forma **determinística e auditável**. Princípios inego
 /app
 ├── backend/
 │   ├── app/
-│   │   ├── motor.py       # Cálculo em Decimal (coração)
-│   │   ├── rulesets.py    # Rulesets seed + resolução por data + hash SHA-256
-│   │   ├── models.py      # Pydantic (contrato)
-│   │   ├── routes.py      # Endpoints
-│   │   └── db.py          # Mongo (append-only)
-│   ├── server.py          # FastAPI entrypoint + lifespan (seed)
-│   └── tests/             # pytest — 17 testes, incl. 3 casos-ouro
-└── frontend/              # React playground (dark, split-pane)
+│   │   ├── motor.py          # Cálculo em Decimal
+│   │   ├── rulesets.py       # Rulesets seed + resolução por data + hash SHA-256
+│   │   ├── models.py         # Pydantic (contrato)
+│   │   ├── auth.py           # JWT + bcrypt + roles + seed admin
+│   │   ├── nfe_parser.py     # Parser XML NF-e
+│   │   ├── audit_ledger.py   # Ledger append-only com hash encadeado
+│   │   ├── servicos.py       # Ingestão + apuração
+│   │   ├── routes.py         # POST /calcular
+│   │   ├── routes_auth.py    # /api/auth/*
+│   │   ├── routes_docs.py    # /api/v1/documentos/*, /apuracao/*, /auditoria/*
+│   │   └── db.py             # Mongo (append-only rulesets + auditoria)
+│   ├── server.py             # FastAPI + lifespan (seed admin + rulesets + indexes)
+│   └── tests/                # 31 testes pytest
+└── frontend/
+    └── src/
+        ├── api.js            # axios + Bearer fallback + error formatter
+        ├── AuthContext.js    # provider + useAuth
+        ├── App.js            # BrowserRouter + rotas protegidas
+        └── components/
+            ├── Shared.js     # Logo, Metric, useTheme, ThemeToggle
+            ├── Header.js     # nav com role-based visibility + logout
+            ├── Login.js      # login form + ProtectedRoute
+            ├── PlaygroundPage.js
+            ├── DocumentosPage.js
+            ├── ApuracaoPage.js
+            ├── AuditoriaPage.js
+            └── UsuariosPage.js
 ```
