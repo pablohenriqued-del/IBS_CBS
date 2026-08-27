@@ -7,6 +7,7 @@ import { PlaygroundPage } from "./components/PlaygroundPage";
 import { DocumentosPage } from "./components/DocumentosPage";
 import { ApuracaoPage } from "./components/ApuracaoPage";
 import { AuditoriaPage } from "./components/AuditoriaPage";
+import { SimuladorPage } from "./components/SimuladorPage";
 import { UsuariosPage } from "./components/UsuariosPage";
 import { Logo, useTheme } from "./components/Shared";
 
@@ -63,6 +64,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Shell><ApuracaoPage /></Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/simulador"
+            element={
+              <ProtectedRoute>
+                <Shell><SimuladorPage /></Shell>
               </ProtectedRoute>
             }
           />

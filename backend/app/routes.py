@@ -16,6 +16,8 @@ from .db import (
 )
 from .models import CalcularRequest, CalcularResponse, ErroDetalhe, ErroResponse
 from .motor import CClassTribDesconhecido, calcular
+from .simulador import simular
+
 from .rulesets import compute_ruleset_hash, resolver_ruleset
 
 router = APIRouter(prefix="/api/v1")
@@ -125,3 +127,42 @@ async def calcular_endpoint(
     )
 
     return CalcularResponse(**resp_sem_auditoria, auditoriaId=auditoria_id)
+
+
+
+@router.post("/simular")
+async def simular_endpoint(
+    req: CalcularRequest,
+    user: dict = Depends(require_role("fiscal", "auditoria", "admin")),
+) -> Dict[str, Any]:
+    """Simula regime atual (ICMS/PIS/Cofins aproximado) vs Reforma (motor real)."""
+    rulesets = await carregar_rulesets()
+    ruleset = resolver_ruleset(rulesets, req.dataOperacao)
+    if ruleset is None:
+        raise HTTPException(
+            status_code=422,
+            detail={"erro": "sem_ruleset_vigente", "dataOperacao": req.dataOperacao.isoformat()},
+        )
+    try:
+        resultado = simular(req, ruleset)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    resultado["rulesetId"] = ruleset["id"]
+    resultado["rulesetHash"] = compute_ruleset_hash(ruleset)
+    resultado["dataOperacao"] = req.dataOperacao.isoformat()
+    resultado["avisos"] = [
+        "cargaAtualPct é uma estimativa média (SP, produtos padrão). Ajustes por setor/UF virão em rulesets dedicados.",
+    ]
+
+    await append_event(
+        action="simular",
+        payload={
+            "referencia": req.referencia,
+            "rulesetId": ruleset["id"],
+            "tributoAtual": resultado["delta"]["totais"]["tributoAtual"],
+            "tributoNovo": resultado["delta"]["totais"]["tributoNovo"],
+            "deltaPct": resultado["delta"]["totais"]["deltaPct"],
+        },
+        actor={"id": user["id"], "email": user["email"], "role": user["role"]},
+    )
+    return resultado

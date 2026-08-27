@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Upload, FileCheck, AlertCircle, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Sparkles, Download } from "lucide-react";
-import { api, formatApiError, API } from "../api";
+import { Upload, FileCheck, AlertCircle, ArrowDownToLine, ArrowUpFromLine, RefreshCw, Sparkles, Download, X } from "lucide-react";
+import { api, formatApiError } from "../api";
 import { useAuth, roleAllowed } from "../AuthContext";
 
 export function DocumentosPage() {
@@ -14,6 +14,7 @@ export function DocumentosPage() {
   const [uploading, setUploading] = useState(false);
   const [samples, setSamples] = useState([]);
   const [samplesLoading, setSamplesLoading] = useState({});
+  const [queue, setQueue] = useState([]); // {name, size, status: 'pending'|'uploading'|'success'|'error', message?}
   const fileRef = useRef(null);
 
   const canUpload = roleAllowed(user, ["fiscal", "admin"]);
@@ -36,25 +37,74 @@ export function DocumentosPage() {
     api.get("/v1/samples").then((r) => setSamples(r.data.amostras)).catch(() => setSamples([]));
   }, []);
 
-  const upload = async (file, dir) => {
-    if (!file) return;
-    setUploading(true);
-    setMessage(null);
+  // Faz upload de UM arquivo. Retorna {ok, message}
+  const uploadOne = async (file, dir, extra = {}) => {
     const fd = new FormData();
     fd.append("arquivo", file);
     fd.append("direcao", dir || direcao);
+    if (extra.origem) fd.append("origem", extra.origem);
     try {
       const { data } = await api.post("/v1/documentos/importar", fd);
+      return {
+        ok: true,
+        message: `CBS R$ ${data.totais.cbs} · IBS R$ ${data.totais.ibs}`,
+      };
+    } catch (e) {
+      return { ok: false, message: formatApiError(e) };
+    }
+  };
+
+  // Bulk upload — processa a fila sequencialmente com progresso por arquivo
+  const uploadMany = async (files, dir) => {
+    const items = files.map((f) => ({
+      name: f.name,
+      size: f.size,
+      status: "pending",
+      _file: f,
+    }));
+    setQueue(items);
+    setUploading(true);
+    setMessage(null);
+
+    let ok = 0, err = 0;
+    for (let i = 0; i < items.length; i++) {
+      setQueue((q) => q.map((it, j) => (j === i ? { ...it, status: "uploading" } : it)));
+      const res = await uploadOne(items[i]._file, dir);
+      setQueue((q) =>
+        q.map((it, j) =>
+          j === i
+            ? { ...it, status: res.ok ? "success" : "error", message: res.message, _file: undefined }
+            : it
+        )
+      );
+      if (res.ok) ok++; else err++;
+    }
+    setUploading(false);
+    setMessage({
+      type: err === 0 ? "success" : "error",
+      text: `${ok}/${items.length} importadas${err ? ` · ${err} com erro` : ""}`,
+    });
+    reload();
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const upload = async (fileOrList, dir) => {
+    if (!fileOrList) return;
+    const files = Array.isArray(fileOrList) ? fileOrList : Array.from(fileOrList.length !== undefined ? fileOrList : [fileOrList]);
+    if (files.length === 0) return;
+    if (files.length === 1) {
+      // Fluxo simples para 1 arquivo (mantém mensagem inline)
+      setUploading(true);
+      const res = await uploadOne(files[0], dir);
+      setUploading(false);
       setMessage({
-        type: "success",
-        text: `✓ NF-e ${data.chaveAcesso.slice(-8)} importada · CBS R$ ${data.totais.cbs} · IBS R$ ${data.totais.ibs}`,
+        type: res.ok ? "success" : "error",
+        text: res.ok ? `✓ ${files[0].name} · ${res.message}` : res.message,
       });
       reload();
-    } catch (e) {
-      setMessage({ type: "error", text: formatApiError(e) });
-    } finally {
-      setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
+    } else {
+      await uploadMany(files, dir);
     }
   };
 
@@ -64,14 +114,21 @@ export function DocumentosPage() {
     try {
       const { data: blob } = await api.get(`/v1/samples/${sample.arquivo}`, { responseType: "blob" });
       const file = new File([blob], sample.arquivo, { type: "application/xml" });
-      await upload(file, sample.direcao);
+      // Chama uploadOne diretamente com origem=sample:{nome} para o ledger
+      setUploading(true);
+      const res = await uploadOne(file, sample.direcao, { origem: `sample:${sample.arquivo}` });
+      setUploading(false);
+      setMessage({
+        type: res.ok ? "success" : "error",
+        text: res.ok ? `✓ Amostra ${sample.arquivo} · ${res.message}` : res.message,
+      });
+      reload();
     } finally {
       setSamplesLoading((s) => ({ ...s, [sample.arquivo]: false }));
     }
   };
 
   const baixarAmostra = (nome) => {
-    // Abre em nova aba usando fetch com auth header — simpler: crie um link data
     api.get(`/v1/samples/${nome}`, { responseType: "blob" }).then((res) => {
       const url = URL.createObjectURL(res.data);
       const a = document.createElement("a");
@@ -85,8 +142,13 @@ export function DocumentosPage() {
   const onDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f) upload(f);
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length) upload(files);
+  };
+
+  const onFileChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length) upload(files);
   };
 
   return (
@@ -120,24 +182,90 @@ export function DocumentosPage() {
             >
               <Upload className="w-8 h-8 mx-auto mb-3 text-accent" strokeWidth={1.5} />
               <div className="font-heading text-lg text-strong mb-1">
-                Arraste o XML aqui, ou clique para selecionar
+                Arraste XMLs aqui, ou clique para selecionar
               </div>
               <div className="text-[12.5px] text-muted">
                 Aceita <span className="font-mono text-text">nfeProc</span> ou{" "}
-                <span className="font-mono text-text">NFe</span> até 5 MB
+                <span className="font-mono text-text">NFe</span> — até 5 MB por arquivo · múltiplos ao mesmo tempo
               </div>
               <input
                 ref={fileRef}
                 type="file"
                 accept=".xml,application/xml,text/xml"
-                onChange={(e) => upload(e.target.files?.[0])}
+                multiple
+                onChange={onFileChange}
                 className="hidden"
                 data-testid="file-input"
               />
-              {uploading && (
+              {uploading && queue.length === 0 && (
                 <div className="mt-4 text-[12px] font-mono text-muted cursor">› enviando</div>
               )}
             </div>
+
+            {/* Fila de bulk upload */}
+            {queue.length > 0 && (
+              <div className="mt-4 border border-border rounded-md bg-surface overflow-hidden" data-testid="upload-queue">
+                <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+                  <div className="text-[10px] uppercase tracking-[0.25em] text-muted">
+                    Fila · {queue.filter((q) => q.status === "success").length}/{queue.length} concluídas
+                  </div>
+                  {!uploading && (
+                    <button
+                      onClick={() => setQueue([])}
+                      className="text-[11px] font-mono text-muted hover:text-error flex items-center gap-1"
+                      data-testid="clear-queue"
+                    >
+                      <X className="w-3 h-3" /> limpar
+                    </button>
+                  )}
+                </div>
+                {/* Progress bar geral */}
+                <div className="h-1 bg-bg relative">
+                  <div
+                    className="h-full bg-accent transition-all duration-300"
+                    style={{
+                      width: `${(queue.filter((q) => q.status !== "pending" && q.status !== "uploading").length / queue.length) * 100}%`,
+                    }}
+                  />
+                </div>
+                {/* Items */}
+                <div className="max-h-64 overflow-auto">
+                  {queue.map((q, i) => (
+                    <div
+                      key={i}
+                      data-testid={`queue-item-${i}`}
+                      className={`px-4 py-2 border-b border-border/50 flex items-center gap-3 text-[12px] ${
+                        q.status === "uploading" ? "bg-accentDim" : ""
+                      }`}
+                    >
+                      <span className="font-mono text-muted w-6 tabular-nums">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="font-mono text-strong flex-1 truncate">{q.name}</span>
+                      <span className="font-mono text-[10.5px] text-muted">
+                        {(q.size / 1024).toFixed(1)} KB
+                      </span>
+                      {q.status === "pending" && (
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted">aguardando</span>
+                      )}
+                      {q.status === "uploading" && (
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-accent cursor">enviando</span>
+                      )}
+                      {q.status === "success" && (
+                        <span className="text-[10.5px] font-mono text-success flex items-center gap-1">
+                          <FileCheck className="w-3 h-3" /> {q.message}
+                        </span>
+                      )}
+                      {q.status === "error" && (
+                        <span className="text-[10.5px] font-mono text-error flex items-center gap-1 truncate max-w-xs" title={q.message}>
+                          <AlertCircle className="w-3 h-3 flex-shrink-0" /> {q.message}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="col-span-12 lg:col-span-4">

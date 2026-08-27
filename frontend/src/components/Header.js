@@ -18,6 +18,7 @@ export function Header({ theme, onToggleTheme }) {
     { to: "/", label: "Playground", roles: ["fiscal", "auditoria", "admin"] },
     { to: "/documentos", label: "Documentos", roles: ["fiscal", "auditoria", "admin"] },
     { to: "/apuracao", label: "Apuração", roles: ["fiscal", "auditoria", "admin"] },
+    { to: "/simulador", label: "Simulador", roles: ["fiscal", "auditoria", "admin"] },
     { to: "/auditoria", label: "Auditoria", roles: ["auditoria", "admin"] },
     { to: "/usuarios", label: "Usuários", roles: ["admin"] },
   ].filter((it) => (user ? roleAllowed(user, it.roles) : false));

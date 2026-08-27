@@ -44,6 +44,9 @@ RULESETS_SEED: List[Dict[str, Any]] = [
                 "descricao": "tributação integral",
                 "cst": "000",
                 "reducao": "0.0000",
+                # Carga tributária média do regime atual (ICMS + PIS/Cofins).
+                # Fonte: estimativa para produtos de consumo padrão (SP).
+                "cargaAtualPct": "27.2500",
             },
         },
         "avisos": [
@@ -65,11 +68,15 @@ RULESETS_SEED: List[Dict[str, Any]] = [
                 "descricao": "tributação integral",
                 "cst": "000",
                 "reducao": "0.0000",
+                # ICMS 18% (SP) + PIS 1,65% + COFINS 7,6% = 27,25% (não-cumulativo agregado)
+                "cargaAtualPct": "27.2500",
             },
             "200052": {
                 "descricao": "redução de 60%",
                 "cst": "200",
                 "reducao": "60.0000",
+                # Medicamentos: regime específico, carga média ~10% (ICMS reduzido + PIS/Cofins zerado em muitos)
+                "cargaAtualPct": "10.0000",
             },
         },
         "avisos": [

@@ -107,6 +107,7 @@ async def baixar_amostra(nome: str, _user: dict = Depends(get_current_user)):
 async def importar(
     arquivo: UploadFile = File(...),
     direcao: str = Form(..., pattern="^(entrada|saida)$"),
+    origem: Optional[str] = Form(None),
     user: dict = Depends(require_role("fiscal", "admin")),
 ):
     conteudo = await arquivo.read()
@@ -131,17 +132,21 @@ async def importar(
             detail={"erro": "sem_ruleset_vigente", "dataOperacao": e.data},
         )
 
+    ledger_payload = {
+        "chaveAcesso": doc["chaveAcesso"],
+        "direcao": doc["direcao"],
+        "dataOperacao": doc["dataOperacao"],
+        "cbs": doc["totais"]["cbs"],
+        "ibs": doc["totais"]["ibs"],
+        "impostoSeletivo": doc["totais"]["impostoSeletivo"],
+        "rulesetId": doc["rulesetId"],
+        "arquivo": arquivo.filename,
+    }
+    if origem:
+        ledger_payload["origem"] = origem
     await append_event(
         action="documento.importado",
-        payload={
-            "chaveAcesso": doc["chaveAcesso"],
-            "direcao": doc["direcao"],
-            "dataOperacao": doc["dataOperacao"],
-            "cbs": doc["totais"]["cbs"],
-            "ibs": doc["totais"]["ibs"],
-            "impostoSeletivo": doc["totais"]["impostoSeletivo"],
-            "rulesetId": doc["rulesetId"],
-        },
+        payload=ledger_payload,
         actor={"id": user["id"], "email": user["email"], "role": user["role"]},
     )
     return doc
