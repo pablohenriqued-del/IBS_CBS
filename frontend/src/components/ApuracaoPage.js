@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Calculator, ArrowDownToLine, ArrowUpFromLine, Equal } from "lucide-react";
+import { Calculator, ArrowDownToLine, ArrowUpFromLine, Equal, Download } from "lucide-react";
 import { api, formatApiError } from "../api";
 import { Metric } from "./Shared";
 
@@ -22,6 +22,51 @@ export function ApuracaoPage() {
     } catch (e) {
       setError(formatApiError(e));
     } finally { setLoading(false); }
+  };
+
+  const csvEscape = (v) => {
+    const s = String(v ?? "");
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const downloadCsv = () => {
+    if (!result) return;
+    const lines = [];
+    // Cabeçalho + metadados do período
+    lines.push(`# FiscalCore Motor - Apuracao por periodo`);
+    lines.push(`# periodo;${result.periodo.inicio};${result.periodo.fim}`);
+    lines.push(`# gerado_em;${new Date().toISOString()}`);
+    lines.push("");
+    // Bloco resumo
+    lines.push("bloco;base;cbs;ibsUF;ibsMunicipio;ibs;impostoSeletivo;documentos");
+    const row = (label, obj, docs) => [
+      label, obj.base, obj.cbs, obj.ibsUF, obj.ibsMunicipio, obj.ibs, obj.impostoSeletivo, docs ?? ""
+    ].map(csvEscape).join(";");
+    lines.push(row("debitos", result.debitos, result.debitos.documentos));
+    lines.push(row("creditos", result.creditos, result.creditos.documentos));
+    lines.push([
+      "apurado", "", result.apurado.cbs, result.apurado.ibsUF,
+      result.apurado.ibsMunicipio, result.apurado.ibs, "", result.apurado.total,
+    ].map(csvEscape).join(";"));
+    lines.push("");
+    // Detalhe de documentos
+    lines.push("direcao;chaveAcesso;dataOperacao;emitente;base;cbs;ibs;impostoSeletivo;tributosTotais");
+    for (const d of result.documentos) {
+      lines.push([
+        d.direcao, d.chaveAcesso, d.dataOperacao, d.emitente || "",
+        d.base || "", d.cbs, d.ibs, d.impostoSeletivo || "0.00", d.tributosTotais,
+      ].map(csvEscape).join(";"));
+    }
+    const csv = "\ufeff" + lines.join("\n"); // BOM p/ Excel
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `apuracao_${result.periodo.inicio}_${result.periodo.fim}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -134,6 +179,16 @@ export function ApuracaoPage() {
                 Total a apurar (CBS + IBS)
               </div>
               <div className="big-num text-3xl text-strong">R$ {result.apurado.total}</div>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                onClick={downloadCsv}
+                data-testid="apuracao-csv-btn"
+                className="inline-flex items-center gap-2 border border-accent/50 text-accent bg-transparent hover:bg-accentDim rounded-md px-4 py-2 text-[11px] font-mono uppercase tracking-[0.22em] transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Baixar CSV (Excel · UTF-8)
+              </button>
             </div>
           </div>
 

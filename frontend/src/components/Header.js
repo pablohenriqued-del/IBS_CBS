@@ -19,6 +19,7 @@ export function Header({ theme, onToggleTheme }) {
     { to: "/documentos", label: "Documentos", roles: ["fiscal", "auditoria", "admin"] },
     { to: "/apuracao", label: "Apuração", roles: ["fiscal", "auditoria", "admin"] },
     { to: "/simulador", label: "Simulador", roles: ["fiscal", "auditoria", "admin"] },
+    { to: "/sap", label: "SAP", roles: ["fiscal", "auditoria", "admin"] },
     { to: "/auditoria", label: "Auditoria", roles: ["auditoria", "admin"] },
     { to: "/usuarios", label: "Usuários", roles: ["admin"] },
     { to: "/sobre", label: "Sobre", roles: ["fiscal", "auditoria", "admin"] },

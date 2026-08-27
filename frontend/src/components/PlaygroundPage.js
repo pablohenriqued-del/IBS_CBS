@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Play, RefreshCw, Layers, FileText, ChevronRight, Hash, Fingerprint,
-  Check, Copy,
+  Check, Copy, Server, X,
 } from "lucide-react";
 import { api, formatApiError } from "../api";
 import { Metric } from "./Shared";
@@ -204,6 +204,10 @@ export function PlaygroundPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("visual");
+  const [sapOpen, setSapOpen] = useState(false);
+  const [sapLoading, setSapLoading] = useState(false);
+  const [sapResp, setSapResp] = useState(null);
+  const [sapErr, setSapErr] = useState(null);
 
   useEffect(() => {
     api.get("/v1/rulesets").then((r) => {
@@ -227,6 +231,31 @@ export function PlaygroundPage() {
   };
 
   const resetGolden = () => { setDataOperacao(GOLDEN_REQUEST.dataOperacao); setItens(GOLDEN_REQUEST.itens); setResponse(null); setError(null); };
+
+  const simularSap = async () => {
+    setSapLoading(true); setSapErr(null); setSapResp(null); setSapOpen(true);
+    try {
+      // pega o payload KOMV exemplo pré-montado e substitui pelos itens atuais do playground
+      const { data: exemplo } = await api.get("/v1/sap/exemplo");
+      exemplo.dataOperacao = dataOperacao;
+      exemplo.itens = itens.map((it, idx) => ({
+        kposn: (idx + 1) * 10,
+        matnr: `MAT-${String(idx + 1).padStart(3, "0")}`,
+        arktx: it.descricao || `Item ${idx + 1}`,
+        ncm: it.ncm || "",
+        cClassTrib: it.cClassTrib,
+        menge: it.quantidade,
+        meins: "PC",
+        kbetr: it.valorUnitario,
+        kwert: it.valorItem,
+        ...(it.impostoSeletivo ? { impostoSeletivo: it.impostoSeletivo } : {}),
+      }));
+      const { data } = await api.post("/v1/sap/pricing", exemplo);
+      setSapResp(data);
+    } catch (e) {
+      setSapErr(formatApiError(e));
+    } finally { setSapLoading(false); }
+  };
 
   return (
     <div className="grain">
@@ -282,6 +311,10 @@ export function PlaygroundPage() {
               className="w-full mt-2 bg-accent text-bg font-semibold rounded-md py-4 flex items-center justify-center gap-2 hover:bg-accentHover hover:-translate-y-0.5 transition-transform duration-150 disabled:opacity-60 disabled:hover:translate-y-0">
               <Play className="w-4 h-4" strokeWidth={2.5} />{loading ? "Calculando…" : "Calcular"}
             </button>
+            <button onClick={simularSap} disabled={sapLoading} data-testid="sap-simular-btn"
+              className="w-full border border-accent/40 text-accent bg-transparent hover:bg-accentDim rounded-md py-3 flex items-center justify-center gap-2 transition-colors font-mono text-[12px] uppercase tracking-[0.22em] disabled:opacity-60">
+              <Server className="w-3.5 h-3.5" />{sapLoading ? "chamando S/4HANA…" : "simular chamada S/4HANA"}
+            </button>
           </div>
 
           <div className="col-span-12 lg:col-span-7">
@@ -328,6 +361,105 @@ export function PlaygroundPage() {
           </div>
         </div>
       </section>
+
+      {sapOpen && (
+        <div className="fixed inset-0 z-50 bg-bg/80 backdrop-blur-sm flex items-center justify-center p-6" data-testid="sap-modal">
+          <div className="relative w-full max-w-5xl max-h-[85vh] overflow-auto border border-border rounded-lg bg-surface shadow-2xl">
+            <div className="sticky top-0 z-10 border-b border-border bg-surface/95 backdrop-blur px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Server className="w-4 h-4 text-accent" />
+                <div>
+                  <div className="font-heading text-lg text-strong">POST /api/v1/sap/pricing</div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted">SAP S/4HANA · pricing schema ZFISC01 · KOMV in/out</div>
+                </div>
+              </div>
+              <button onClick={() => setSapOpen(false)} data-testid="sap-modal-close" className="text-muted hover:text-strong">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {sapLoading && (
+                <div className="font-mono text-sm text-muted cursor">› chamando motor externo, montando condition types…</div>
+              )}
+              {sapErr && (
+                <div className="border border-error/30 bg-error/5 rounded-md p-4 text-error font-mono text-[12px]">⨯ {sapErr}</div>
+              )}
+              {sapResp && (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Metric label="VBELN (documento)" value={sapResp.vbeln} />
+                    <Metric label="Ruleset" value={sapResp.rulesetId} />
+                    <Metric label="Schema pricing" value={sapResp.schemaPricing} />
+                    <Metric label="Moeda (WAERK)" value={sapResp.waerk} />
+                  </div>
+
+                  <div className="border border-accent/40 bg-gradient-to-br from-accentDim to-transparent rounded-md p-5">
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-accent mb-3 flex items-center gap-2"><span className="rule-accent" />Totais do documento</div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.25em] text-muted mb-1">Net (base)</div>
+                        <div className="big-num text-xl text-strong">R$ {sapResp.totals.netVal}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.25em] text-muted mb-1">Tributos</div>
+                        <div className="big-num text-xl text-accent">R$ {sapResp.totals.taxAmount}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-[0.25em] text-muted mb-1">Gross (documento)</div>
+                        <div className="big-num text-xl text-strong">R$ {sapResp.totals.grossVal}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.25em] text-muted mb-3 flex items-center gap-2"><span className="rule-accent" />Tabela KOMV devolvida</div>
+                    <div className="border border-border rounded-md overflow-hidden">
+                      <table className="w-full font-mono text-[12px]" data-testid="sap-komv-table">
+                        <thead className="bg-elev text-muted uppercase tracking-[0.18em] text-[10px]">
+                          <tr>
+                            <th className="text-left px-3 py-2">KPOSN</th>
+                            <th className="text-left px-3 py-2">STUNR</th>
+                            <th className="text-left px-3 py-2">KSCHL</th>
+                            <th className="text-left px-3 py-2">Descrição</th>
+                            <th className="text-right px-3 py-2">KBETR (%)</th>
+                            <th className="text-right px-3 py-2">KAWRT</th>
+                            <th className="text-right px-3 py-2">KWERT</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {sapResp.conditions.map((c, i) => (
+                            <tr key={i} className="hover:bg-elev/40" data-testid={`sap-row-${c.kposn}-${c.kschl}`}>
+                              <td className="px-3 py-2 tabular-nums">{c.kposn}</td>
+                              <td className="px-3 py-2 tabular-nums text-muted">{c.stunr}</td>
+                              <td className="px-3 py-2 text-accent">{c.kschl}</td>
+                              <td className="px-3 py-2 text-text/80">{c.vtext}</td>
+                              <td className="px-3 py-2 text-right tabular-nums">{c.kbetr}</td>
+                              <td className="px-3 py-2 text-right tabular-nums">{c.kawrt}</td>
+                              <td className="px-3 py-2 text-right tabular-nums text-strong">{c.kwert}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-2 text-[10.5px] font-mono text-muted">
+                      Motor externo autoritativo. Zero ABAP crítico. Cada linha grava evento <span className="text-strong">sap.pricing</span> no ledger.
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted flex items-center gap-2">
+                      <Hash className="w-3 h-3" />
+                      <span className="normal-case tracking-normal text-text/70">{sapResp.rulesetHash}</span>
+                    </div>
+                    <CopyBtn text={JSON.stringify(sapResp, null, 2)} testid="sap-copy-json" />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

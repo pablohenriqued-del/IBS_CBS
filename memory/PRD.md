@@ -56,6 +56,45 @@ fiscais brasileiras de forma **determinística e auditável**. Princípios inego
 - 31 testes pytest verdes (17 golden + 14 do Módulo 2 cobrindo auth, ingestão,
   idempotência, apuração e integridade do ledger).
 
+### Módulo 3 (2026-02-01) — LinkedIn Kit + SAP-sim
+- **Página `/sobre`** (portfolio C-level) com assinatura Pablo Duarte, footer com
+  link do LinkedIn, e conteúdo posicionando o motor como solução de engenharia.
+  **Rota pública desde 2026-02-01** (sem `ProtectedRoute`) — pronta para virar
+  link direto de portfólio no LinkedIn e assinatura de e-mail.
+- **`LINKEDIN-POST.md`** — kit com 3 versões (executiva, técnica, híbrida) +
+  storyboard de carrossel de 6 slides + estratégia de publicação em 2 semanas.
+- **`LINKEDIN-POST-SHORT.md`** — versão curta (~155 palavras) mobile-first,
+  tom C-level, sem emojis, com CTA "comenta 'FiscalCore' que envio o link do repo".
+  Agendada para publicar hoje 00h50 (nicho de baixa competição / alto sinal).
+- **Carrossel PDF (`/app/FiscalCore-LinkedIn-Carousel.pdf`)** — 6 slides
+  1080x1080 gerados via Playwright headless a partir das páginas reais.
+- **SAP-sim (`POST /api/v1/sap/pricing`)**:
+  - Aceita payload no formato KOMV (VBELN, KPOSN, MATNR, KBETR, KWERT...)
+  - Devolve tabela KOMV com condition types `Z-namespace`: **ZCBS**, **ZIBU**,
+    **ZIBM**, **ZISE** — nos STUNR corretos do pricing schema `ZFISC01`.
+  - `GET /api/v1/sap/exemplo` — payload pré-montado.
+  - Frontend: botão "Simular chamada S/4HANA" no Playground abre modal com
+    cabeçalho SAP, totais (net/tax/gross) e tabela KOMV completa.
+- **IDOC INVOIC02 parser (`POST /api/v1/sap/idoc/parse`)**:
+  - Parser XML tolerante para segmentos EDI_DC40, E1EDK01, E1EDP01, E1EDP19,
+    E1EDP04 (multi-linha), E1EDS01 e extensão custom Z1FISC_CLASTRIB.
+  - `GET /api/v1/sap/idoc/samples` + `GET /api/v1/sap/idoc/samples/{id}` para
+    baixar amostras (uma convergente, uma com 2 divergências propositais).
+- **Reconciliação SAP × FiscalCore (`POST /api/v1/sap/reconciliar`)**:
+  - Recebe IDOC parseado + contexto fiscal → recalcula com o motor autoritativo.
+  - Devolve tabela linha a linha por `(KPOSN, KSCHL)` com valor SAP, valor
+    FiscalCore, delta em reais, status (`match|diverge|sap_faltante|fiscalcore_faltante`).
+  - Veredicto final: **convergente** ou **divergente**, com tolerância configurável
+    (padrão ±R$ 0,02).
+  - Página `/sap` com dropzone IDOC + botões de amostras + painel veredicto +
+    tabela detalhada por condition type.
+- **Export CSV Apuração**: botão "Baixar CSV (Excel · UTF-8)" na tela `/apuracao`
+  gera CSV com BOM, cabeçalho de metadados do período, blocos de débitos/créditos/
+  apurado e linha detalhada por documento — pronto para o time contábil.
+- Grava eventos auditáveis no ledger: `sap.pricing`, `sap.idoc.parsed`, `sap.reconciliar`.
+- **Total: 80 testes pytest verdes** (70 anteriores + 10 novos: 3 parser puro,
+  4 endpoint IDOC, 3 reconciliação com convergente + divergente + veredicto no ledger).
+
 ## Prioritized backlog
 
 ### P0 — próximas para produção
@@ -64,11 +103,12 @@ fiscais brasileiras de forma **determinística e auditável**. Princípios inego
 - Idempotency-Key para POST /calcular: hoje é registrada mas não desduplica.
 
 ### P1 — features do produto
-- `POST /api/v1/simular` (cenário "carga hoje vs. carga nova"; contrato §9).
-- Exportação CSV/XLSX da apuração (R6 do runbook).
+- **Export PDF da apuração** (o CSV já foi entregue no Módulo 3; falta o PDF
+  com layout de relatório mensal formatado).
+- Password reset flow.
+- Rate limit por API key/tenant (proteção do endpoint SAP quando exposto).
 - Conciliação IBS/CBS × PIS/Cofins do mesmo período (compensação 2026).
 - Adaptador DF-e (resposta → grupos IBS/CBS/IS de NF-e/NFC-e/NFS-e).
-- Password reset flow.
 
 ### P2 — enriquecimento fiscal
 - Catálogo completo de `cClassTrib` (hoje 2 códigos).

@@ -11,6 +11,7 @@ import { AuditoriaPage } from "./components/AuditoriaPage";
 import { SimuladorPage } from "./components/SimuladorPage";
 import { SobrePage } from "./components/SobrePage";
 import { UsuariosPage } from "./components/UsuariosPage";
+import { SapReconciliarPage } from "./components/SapReconciliarPage";
 import { Logo, useTheme } from "./components/Shared";
 
 function Shell({ children }) {
@@ -78,6 +79,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/sobre" element={<Shell><SobrePage /></Shell>} />
           <Route
             path="/"
             element={
@@ -107,6 +109,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Shell><SimuladorPage /></Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sap"
+            element={
+              <ProtectedRoute>
+                <Shell><SapReconciliarPage /></Shell>
               </ProtectedRoute>
             }
           />

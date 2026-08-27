@@ -17,6 +17,7 @@ from app.db import seed_rulesets  # noqa: E402
 from app.routes import router as router_motor  # noqa: E402
 from app.routes_auth import router as router_auth  # noqa: E402
 from app.routes_docs import router as router_docs  # noqa: E402
+from app.routes_sap import router as router_sap  # noqa: E402
 from app.rulesets import RULESETS_SEED, compute_ruleset_hash  # noqa: E402
 
 
@@ -62,6 +63,7 @@ app.add_middleware(
 app.include_router(router_auth)
 app.include_router(router_motor)
 app.include_router(router_docs)
+app.include_router(router_sap)
 
 
 @app.get("/")
@@ -86,5 +88,7 @@ async def raiz():
             "POST /api/v1/apuracao/periodo",
             "GET  /api/v1/auditoria/ledger (auditoria, admin)",
             "GET  /api/v1/auditoria/verificar (auditoria, admin)",
+            "POST /api/v1/sap/pricing (fiscal, admin)",
+            "GET  /api/v1/sap/exemplo",
         ],
     }

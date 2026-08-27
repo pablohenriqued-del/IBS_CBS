@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<INVOIC02>
+  <IDOC BEGIN="1">
+    <EDI_DC40 SEGMENT="1">
+      <TABNAM>EDI_DC40</TABNAM>
+      <MANDT>100</MANDT>
+      <DOCNUM>0000000012345</DOCNUM>
+      <IDOCTP>INVOIC02</IDOCTP>
+      <MESTYP>INVOIC</MESTYP>
+      <SNDPRT>LS</SNDPRT>
+      <SNDPRN>S4HANABR01</SNDPRN>
+      <RCVPRT>LS</RCVPRT>
+      <RCVPRN>FISCALCORE</RCVPRN>
+      <STDMES>INVOIC</STDMES>
+    </EDI_DC40>
+    <E1EDK01 SEGMENT="1">
+      <CURCY>BRL</CURCY>
+      <BELNR>0001234567</BELNR>
+      <BSART>INVO</BSART>
+      <BRGEW>0.000</BRGEW>
+      <RECIPNT_NO>0000100234</RECIPNT_NO>
+    </E1EDK01>
+    <E1EDK14 SEGMENT="1">
+      <QUALF>011</QUALF>
+      <ORGID>BR01</ORGID>
+    </E1EDK14>
+
+    <E1EDP01 SEGMENT="1">
+      <POSEX>000010</POSEX>
+      <MENGE>1.000</MENGE>
+      <MENEE>PC</MENEE>
+      <NETWR>1000.00</NETWR>
+      <VPREI>1000.00</VPREI>
+      <E1EDP19 SEGMENT="1">
+        <QUALF>001</QUALF>
+        <IDTNR>MAT-CAD-001</IDTNR>
+        <KTEXT>Cadeira de escritorio</KTEXT>
+      </E1EDP19>
+      <Z1FISC_CLASTRIB SEGMENT="1">
+        <CCLASSTRIB>000001</CCLASSTRIB>
+      </Z1FISC_CLASTRIB>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z1</MWSKZ>
+        <MSATZ>8.80</MSATZ>
+        <MWSBT>88.00</MWSBT>
+        <TXJCD>ZCBS</TXJCD>
+      </E1EDP04>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z2</MWSKZ>
+        <MSATZ>12.00</MSATZ>
+        <MWSBT>120.00</MWSBT>
+        <TXJCD>ZIBU</TXJCD>
+      </E1EDP04>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z3</MWSKZ>
+        <MSATZ>5.70</MSATZ>
+        <MWSBT>57.00</MWSBT>
+        <TXJCD>ZIBM</TXJCD>
+      </E1EDP04>
+    </E1EDP01>
+
+    <E1EDP01 SEGMENT="1">
+      <POSEX>000020</POSEX>
+      <MENGE>1.000</MENGE>
+      <MENEE>PC</MENEE>
+      <NETWR>500.00</NETWR>
+      <VPREI>500.00</VPREI>
+      <E1EDP19 SEGMENT="1">
+        <QUALF>001</QUALF>
+        <IDTNR>MAT-MED-060</IDTNR>
+        <KTEXT>Medicamento (reducao 60%)</KTEXT>
+      </E1EDP19>
+      <Z1FISC_CLASTRIB SEGMENT="1">
+        <CCLASSTRIB>200052</CCLASSTRIB>
+      </Z1FISC_CLASTRIB>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z1</MWSKZ>
+        <MSATZ>3.52</MSATZ>
+        <MWSBT>17.60</MWSBT>
+        <TXJCD>ZCBS</TXJCD>
+      </E1EDP04>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z2</MWSKZ>
+        <MSATZ>4.80</MSATZ>
+        <MWSBT>24.00</MWSBT>
+        <TXJCD>ZIBU</TXJCD>
+      </E1EDP04>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z3</MWSKZ>
+        <MSATZ>2.28</MSATZ>
+        <MWSBT>11.40</MWSBT>
+        <TXJCD>ZIBM</TXJCD>
+      </E1EDP04>
+    </E1EDP01>
+
+    <E1EDP01 SEGMENT="1">
+      <POSEX>000030</POSEX>
+      <MENGE>1.000</MENGE>
+      <MENEE>PC</MENEE>
+      <NETWR>200.00</NETWR>
+      <VPREI>200.00</VPREI>
+      <E1EDP19 SEGMENT="1">
+        <QUALF>001</QUALF>
+        <IDTNR>MAT-BEB-IS</IDTNR>
+        <KTEXT>Bebida acucarada (IS 10%)</KTEXT>
+      </E1EDP19>
+      <Z1FISC_CLASTRIB SEGMENT="1">
+        <CCLASSTRIB>000001</CCLASSTRIB>
+      </Z1FISC_CLASTRIB>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z4</MWSKZ>
+        <MSATZ>10.00</MSATZ>
+        <MWSBT>20.00</MWSBT>
+        <TXJCD>ZISE</TXJCD>
+      </E1EDP04>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z1</MWSKZ>
+        <MSATZ>8.80</MSATZ>
+        <MWSBT>19.36</MWSBT>
+        <TXJCD>ZCBS</TXJCD>
+      </E1EDP04>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z2</MWSKZ>
+        <MSATZ>12.00</MSATZ>
+        <MWSBT>26.40</MWSBT>
+        <TXJCD>ZIBU</TXJCD>
+      </E1EDP04>
+      <E1EDP04 SEGMENT="1">
+        <MWSKZ>Z3</MWSKZ>
+        <MSATZ>5.70</MSATZ>
+        <MWSBT>12.54</MWSBT>
+        <TXJCD>ZIBM</TXJCD>
+      </E1EDP04>
+    </E1EDP01>
+
+    <E1EDS01 SEGMENT="1">
+      <SUMID>001</SUMID>
+      <SUMME>1700.00</SUMME>
+    </E1EDS01>
+    <E1EDS01 SEGMENT="1">
+      <SUMID>010</SUMID>
+      <SUMME>396.30</SUMME>
+    </E1EDS01>
+    <E1EDS01 SEGMENT="1">
+      <SUMID>011</SUMID>
+      <SUMME>2096.30</SUMME>
+    </E1EDS01>
+  </IDOC>
+</INVOIC02>
