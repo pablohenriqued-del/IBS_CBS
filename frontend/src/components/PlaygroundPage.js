@@ -152,13 +152,15 @@ function Features() {
     { k: "04", title: "Regra é dado, não código", body: "Rulesets versionados com hash SHA-256 e vigência. A dataOperacao resolve a regra — nunca o dia em que foi processada." },
   ];
   return (
-    <section className="max-w-[1400px] mx-auto px-6 py-16 border-y border-border relative">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+    <section className="max-w-[1400px] mx-auto px-6 py-10 border-y border-border/60 relative">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
         {items.map((it, i) => (
-          <div key={it.k} className="reveal stagger" style={{ "--i": i }}>
-            <div className="font-heading text-3xl text-accent mb-3 tabular-nums">{it.k}</div>
-            <div className="font-heading text-lg text-strong mb-2 leading-snug">{it.title}</div>
-            <p className="text-[13.5px] text-muted leading-relaxed">{it.body}</p>
+          <div key={it.k} className="reveal stagger flex gap-3" style={{ "--i": i }}>
+            <div className="font-mono text-[11px] text-accent/80 tabular-nums pt-0.5 shrink-0">{it.k}</div>
+            <div>
+              <div className="text-[13px] text-strong mb-1 leading-snug font-medium">{it.title}</div>
+              <p className="text-[12px] text-muted leading-relaxed">{it.body}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -279,11 +281,12 @@ export function PlaygroundPage() {
 
       <Features />
 
-      <section className="max-w-[1400px] mx-auto px-6 py-16 relative">
-        <div className="flex items-baseline justify-between mb-8">
-          <div>
-            <div className="text-[11px] font-mono uppercase tracking-[0.3em] text-muted mb-2">Playground</div>
-            <h2 className="font-heading text-3xl md:text-4xl tracking-tight text-strong">Os três <span className="serif-italic text-accent">casos-ouro</span>, ao vivo.</h2>
+      <section className="max-w-[1400px] mx-auto px-6 py-10 relative">
+        <div className="flex items-baseline justify-between mb-6">
+          <div className="flex items-baseline gap-3">
+            <div className="text-[10px] font-mono uppercase tracking-[0.28em] text-muted">Playground</div>
+            <span className="text-muted/40">·</span>
+            <h2 className="text-[13px] text-strong tracking-tight">Os três <span className="serif-italic text-accent">casos-ouro</span>, ao vivo.</h2>
           </div>
         </div>
 

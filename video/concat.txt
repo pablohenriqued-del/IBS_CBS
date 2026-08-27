@@ -1,0 +1,7 @@
+file '/app/video/scenes/01_hook.mp4'
+file '/app/video/scenes/02_playground.mp4'
+file '/app/video/scenes/03_simulador.mp4'
+file '/app/video/scenes/04_auditoria.mp4'
+file '/app/video/scenes/05_sap_komv.mp4'
+file '/app/video/scenes/06_sap_reconciliar.mp4'
+file '/app/video/scenes/07_assinatura.mp4'
