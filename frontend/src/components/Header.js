@@ -21,6 +21,7 @@ export function Header({ theme, onToggleTheme }) {
     { to: "/simulador", label: "Simulador", roles: ["fiscal", "auditoria", "admin"] },
     { to: "/auditoria", label: "Auditoria", roles: ["auditoria", "admin"] },
     { to: "/usuarios", label: "Usuários", roles: ["admin"] },
+    { to: "/sobre", label: "Sobre", roles: ["fiscal", "auditoria", "admin"] },
   ].filter((it) => (user ? roleAllowed(user, it.roles) : false));
 
   return (
