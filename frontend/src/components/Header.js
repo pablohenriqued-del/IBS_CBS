@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { ArrowUpRight, LogOut, ShieldCheck } from "lucide-react";
-import { Logo, ThemeToggle } from "./Shared";
+import { BrandLockup, ThemeToggle } from "./Shared";
 import { useAuth, roleAllowed } from "../AuthContext";
 import { API } from "../api";
 
@@ -29,15 +29,7 @@ export function Header({ theme, onToggleTheme }) {
     <header className="sticky top-0 z-20 backdrop-blur-md bg-bg/85 border-b border-border">
       <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between gap-6">
         <NavLink to="/" className="flex items-center gap-3 shrink-0" data-testid="header-brand">
-          <Logo size={28} />
-          <div className="flex items-baseline gap-2">
-            <span className="font-heading font-semibold text-[17px] text-strong tracking-tight">
-              FiscalCore
-            </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted">
-              motor
-            </span>
-          </div>
+          <BrandLockup size={26} showWordmark verbose />
         </NavLink>
 
         {user && (

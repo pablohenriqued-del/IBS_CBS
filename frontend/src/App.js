@@ -12,7 +12,7 @@ import { SimuladorPage } from "./components/SimuladorPage";
 import { SobrePage } from "./components/SobrePage";
 import { UsuariosPage } from "./components/UsuariosPage";
 import { SapReconciliarPage } from "./components/SapReconciliarPage";
-import { Logo, useTheme } from "./components/Shared";
+import { Logo, BrandLockup, useTheme } from "./components/Shared";
 
 function Shell({ children }) {
   const { theme, toggle } = useTheme();
@@ -24,7 +24,7 @@ function Shell({ children }) {
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="flex flex-wrap items-start justify-between gap-6 pb-8">
             <div className="flex items-center gap-3">
-              <Logo size={26} />
+              <BrandLockup size={22} showWordmark={false} />
               <div>
                 <div className="font-heading text-sm text-strong">FiscalCore Motor</div>
                 <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted">

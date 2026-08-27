@@ -17,6 +17,7 @@ from app.db import seed_rulesets  # noqa: E402
 from app.routes import router as router_motor  # noqa: E402
 from app.routes_auth import router as router_auth  # noqa: E402
 from app.routes_docs import router as router_docs  # noqa: E402
+from app.routes_public import router as router_public  # noqa: E402
 from app.routes_sap import router as router_sap  # noqa: E402
 from app.rulesets import RULESETS_SEED, compute_ruleset_hash  # noqa: E402
 
@@ -64,6 +65,7 @@ app.include_router(router_auth)
 app.include_router(router_motor)
 app.include_router(router_docs)
 app.include_router(router_sap)
+app.include_router(router_public)
 
 
 @app.get("/")
